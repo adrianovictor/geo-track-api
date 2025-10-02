@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+	               xmlns:ext="http://www.liquibase.org/xml/ns/dbchangelog-ext" 
+                   xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	               xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog-ext 
+                                       http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-ext.xsd
+					  	               http://www.liquibase.org/xml/ns/dbchangelog 
+                                       http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-3.5.xsd"
+>
+
+	<changeSet id="4b1c6e0d-f63b-49f4-8abf-5262281f937d" author="adriano.victor">
+		<comment>Cria as tabelas referentes ao serviço de Pessoas</comment>
+		<sqlFile path="4b1c6e0d-f63b-49f4-8abf-5262281f937d-create-table-persons.sql" relativeToChangelogFile="true"/>
+		<rollback>
+			<sqlFile path="4b1c6e0d-f63b-49f4-8abf-5262281f937d-create-table-persons.rollback.sql" relativeToChangelogFile="true"/>
+		</rollback>
+	</changeSet>
+
+	<changeSet id="ed7caa0a-2fff-4321-be22-c28dd93d63a3" author="adriano.victor">
+		<tagDatabase tag="1.0.0"/>
+	</changeSet>
+
+</databaseChangeLog>
