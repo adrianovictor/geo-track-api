@@ -1,7 +1,6 @@
 using GeoTruck.Services.Application.DTOs;
 using GeoTruck.Services.Domain.Repositories;
 using MediatR;
-using GeoTruck.Services.Infrastructure.Extensions.Repositories;
 
 namespace GeoTruck.Services.Application.Commands.UpdateVehicle;
 
@@ -11,8 +10,7 @@ public class UpdateVehicleHandler(IVehicleRepository vehicleRepository) : IReque
 
     public async Task<VehicleDto> Handle(UpdateVehicleCommand request, CancellationToken cancellationToken)
     {
-        var vehicle = await _vehicleRepository
-            .GetAllAsync().GetByIdAsync(request.Id);
+        var vehicle = await _vehicleRepository.GetByIdAsync(request.Id);
 
         if (vehicle is null)
         {

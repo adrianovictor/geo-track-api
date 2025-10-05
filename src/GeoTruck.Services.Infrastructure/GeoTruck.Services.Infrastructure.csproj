@@ -20,4 +20,8 @@
     <ProjectReference Include="..\GeoTruck.Services.Domain\GeoTruck.Services.Domain.csproj" />
   </ItemGroup>
 
+  <ItemGroup>
+    <Folder Include="Extensions\" />
+  </ItemGroup>
+
 </Project>

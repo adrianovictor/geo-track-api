@@ -1,8 +1,7 @@
 using GeoTruck.Services.Application.DTOs;
+using GeoTruck.Services.Domain.Exceptions;
 using GeoTruck.Services.Domain.Repositories;
-using GeoTruck.Services.Infrastructure.Extensions.Repositories;
 using MediatR;
-using Microsoft.EntityFrameworkCore;
 
 namespace GeoTruck.Services.Application.Queries.GetAllVehicles;
 
@@ -11,24 +10,23 @@ public class GetAllVehiclesHandler(IVehicleRepository repository) : IRequestHand
     private readonly IVehicleRepository _repository = repository;
     public async Task<GetAllVehiclesResponse> Handle(GetAllVehiclesCommand request, CancellationToken cancellationToken)
     {
-        var query = _repository.GetAllAsync();
-
-        var filteredQuery = query.ApplyFilters(
+        var pagedResult = await _repository.GetVehiclesWithFiltersAsync(
             renavam: request.Renavam,
             plate: request.Plate,
             model: request.Model,
             brand: request.Brand,
-            year: request.Year
-        );
+            year: request.Year,
+            offset: request.Offset,
+            limit: request.Limit,
+            cancellationToken);
 
-        var totalRecords = await filteredQuery.CountAsync(cancellationToken);
+        var vehicles = pagedResult.Items;
+        var totalRecords = pagedResult.TotalRecords;
 
-        var vehicles = await filteredQuery
-            .Paginate(request.Offset, request.Limit)
-            .ToListAsync(cancellationToken);
-
-        if (!vehicles.Any())
-            throw new ApplicationException("Não há veículos cadastrados com os filtros informados.");
+        if (vehicles.Count() == 0)
+        {
+            throw new VehicleNotFoundException("Nenhum veículo encontrado.");
+        }
 
         return new GetAllVehiclesResponse
         {

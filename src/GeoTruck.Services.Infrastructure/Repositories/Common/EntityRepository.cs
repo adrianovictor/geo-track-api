@@ -1,3 +1,4 @@
+using System.Linq.Expressions;
 using GeoTruck.Services.Domain.Common;
 using GeoTruck.Services.Infrastructure.DataContext;
 using Microsoft.EntityFrameworkCore;
@@ -38,6 +39,21 @@ public class EntityRepository(ApplicationDbContext context) : IRepository, IDisp
         return _context.Set<T>();
     }
 
+    public IQueryable<T> GetQueryable<T>() where T : class, IEntity<T>
+    {
+        return _context.Set<T>().AsNoTracking();
+    }
+
+    public async Task<T?> GetFirstOrDefaultAsync<T>(
+        Expression<Func<T, bool>> predicate,
+        CancellationToken cancellationToken
+    ) where T : class, IEntity<T>
+    {
+        return await _context.Set<T>()
+            .Where(predicate)
+            .FirstOrDefaultAsync(cancellationToken);
+    }
+
     public async Task SaveAsync<T>(T entity, bool disableValidationOnSave) where T : class, IEntity<T>
     {
         if (entity.IsPersisted())
@@ -48,7 +64,7 @@ public class EntityRepository(ApplicationDbContext context) : IRepository, IDisp
         {
             _context.Set<T>().Add(entity);
         }
-        
+
         await _context.SaveChangesAsync();
     }
 }

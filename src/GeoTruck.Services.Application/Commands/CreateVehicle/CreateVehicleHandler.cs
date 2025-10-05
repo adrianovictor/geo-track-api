@@ -1,7 +1,6 @@
 using GeoTruck.Services.Application.DTOs;
 using GeoTruck.Services.Domain.Entities;
 using GeoTruck.Services.Domain.Repositories;
-using GeoTruck.Services.Infrastructure.Extensions.Repositories;
 using MediatR;
 
 namespace GeoTruck.Services.Application.Commands.CreateVehicle;
@@ -12,8 +11,7 @@ public class CreateVehicleHandler(IVehicleRepository vehicleRepository) : IReque
 
     public async Task<VehicleDto> Handle(CreateVehicleCommand request, CancellationToken cancellationToken)
     {
-        var existingVehicle = await _vehicleRepository
-            .GetAllAsync().GetByRenavamAsync(request.Renavam);
+        var existingVehicle = await _vehicleRepository.GetByRenavamAsync(request.Renavam);
 
         if (existingVehicle != null)
         {

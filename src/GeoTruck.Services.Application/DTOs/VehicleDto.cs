@@ -4,7 +4,7 @@ public class VehicleDto
 {
     public int Id { get; set; }
     public Guid UniqueId { get; set; }
-    public string LicensePlate { get; set; }
+    public string Plate { get; set; }
     public string Model { get; set; }
     public string Brand { get; set; }
     public int Year { get; set; }
@@ -15,7 +15,7 @@ public class VehicleDto
         {
             Id = id,
             UniqueId = uniqueId,
-            LicensePlate = licensePlate,
+            Plate = licensePlate,
             Model = model,
             Brand = brand,
             Year = year,
