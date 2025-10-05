@@ -1,4 +1,5 @@
 using System;
+using System.Text.RegularExpressions;
 
 namespace GeoTruck.Services.Domain.Exceptions;
 
@@ -55,8 +56,8 @@ public static class ValidationExtensions
 
     public static void ThrowIfBrazilianVehiclePlateInvalid(this string plate, string paramName, string? message = null)
     {
-        var regexOld = new System.Text.RegularExpressions.Regex("^[A-Z]{3}-[0-9]{4}$");
-        var regexNew = new System.Text.RegularExpressions.Regex("^[A-Z]{3}[0-9][A-Z][0-9]{2}$");
+        var regexOld = new Regex(@"^[A-Z]{3}-?[0-9]{4}$");
+        var regexNew = new Regex(@"^[A-Z]{3}[0-9][A-Z][0-9]{2}$");
 
         if (!regexOld.IsMatch(plate) && !regexNew.IsMatch(plate))
         {

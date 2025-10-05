@@ -9,7 +9,8 @@ public class BrazilianPlate
     public BrazilianPlate(string value)
     {
         value.ThrowIfNullOrWhiteSpace(nameof(value));
+        value = value.ToUpperInvariant();
         value.ThrowIfBrazilianVehiclePlateInvalid(nameof(value));
-        Value = value.ToUpperInvariant();
+        Value = value;
     }
 }

@@ -3,15 +3,44 @@ using GeoTruck.Services.Domain.Entities;
 using GeoTruck.Services.Domain.Repositories;
 using GeoTruck.Services.Infrastructure.Extensions.Repositories;
 using GeoTruck.Services.Infrastructure.Repositories.Common;
+using Microsoft.Data.SqlClient;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
+using Polly;
+using Polly.Retry;
 
 namespace GeoTruck.Services.Infrastructure.Repositories;
 
-public class VehicleRepository(IRepository repository, ILogger<VehicleRepository> logger) : IVehicleRepository
+public class VehicleRepository : IVehicleRepository
 {
-    private readonly IRepository _repository = repository;
-    private readonly ILogger<VehicleRepository> _logger = logger;
+    private readonly AsyncRetryPolicy _retryPolicy;
+    private readonly IRepository _repository;
+    private readonly ILogger<VehicleRepository> _logger;
+
+    public VehicleRepository(IRepository repository, ILogger<VehicleRepository> logger)
+    {
+        _repository = repository;
+        _logger = logger;
+
+        _retryPolicy = Policy
+            .Handle<DbUpdateException>()
+            .Or<SqlException>(ex => 
+                ex.Number == -2 ||      // Timeout
+                ex.Number == 1205 ||    // Deadlock
+                ex.Number == 50000)     // Erro personalizado
+            .WaitAndRetryAsync(3, retryAttempt =>
+                TimeSpan.FromSeconds(Math.Pow(2, retryAttempt)),
+                onRetry: (exception, timeSpan, retryCount, context) =>
+                {
+                    _logger.LogWarning(
+                        exception,
+                        "Tentativa {RetryCount} de 3 após {DelayMs}ms devido a {ExceptionType}: {Message}",
+                        retryCount, 
+                        timeSpan.TotalMilliseconds,
+                        exception.GetType().Name,
+                        exception.Message);
+                });
+    }
 
     public Task DeleteAsync(Vehicle vehicle)
     {
@@ -20,17 +49,20 @@ public class VehicleRepository(IRepository repository, ILogger<VehicleRepository
 
     public async Task<Vehicle?> GetByIdAsync(int id, CancellationToken cancellationToken = default)
     {
-        return await _repository.GetFirstOrDefaultAsync<Vehicle>(v => v.Id == id, cancellationToken);
+        return await _retryPolicy.ExecuteAsync(async () =>
+            await _repository.GetFirstOrDefaultAsync<Vehicle>(v => v.Id == id, cancellationToken));
     }
 
     public async Task<Vehicle?> GetByLicensePlateAsync(string licensePlate, CancellationToken cancellationToken = default)
     {
-        return await _repository.GetFirstOrDefaultAsync<Vehicle>(v => v.Plate.Value == licensePlate, cancellationToken);
+        return await _retryPolicy.ExecuteAsync(async () =>
+            await _repository.GetFirstOrDefaultAsync<Vehicle>(v => v.Plate.Value == licensePlate, cancellationToken));
     }
 
     public async Task<Vehicle?> GetByRenavamAsync(string renavam, CancellationToken cancellationToken = default)
     {
-        return await _repository.GetFirstOrDefaultAsync<Vehicle>(v => v.Renavam == renavam, cancellationToken);
+        return await _retryPolicy.ExecuteAsync(async () =>
+            await _repository.GetFirstOrDefaultAsync<Vehicle>(v => v.Renavam == renavam, cancellationToken));
     }
 
     public async Task<PagedResult<Vehicle>> GetVehiclesWithFiltersAsync(string? renavam, string? plate, string? model, string? brand, int? year, int offset, int limit, CancellationToken cancellationToken)
