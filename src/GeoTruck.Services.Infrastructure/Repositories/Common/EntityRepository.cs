@@ -46,10 +46,21 @@ public class EntityRepository(ApplicationDbContext context) : IRepository, IDisp
 
     public async Task<T?> GetFirstOrDefaultAsync<T>(
         Expression<Func<T, bool>> predicate,
-        CancellationToken cancellationToken
+        Expression<Func<T, object>>[] includeProperties = null,
+        CancellationToken cancellationToken = default
     ) where T : class, IEntity<T>
     {
-        return await _context.Set<T>()
+        IQueryable<T> query = _context.Set<T>();
+
+        if (includeProperties != null)
+        {
+            foreach (var includeProperty in includeProperties)
+            {
+                query = query.Include(includeProperty);
+            }
+        }
+
+        return await query
             .Where(predicate)
             .FirstOrDefaultAsync(cancellationToken);
     }

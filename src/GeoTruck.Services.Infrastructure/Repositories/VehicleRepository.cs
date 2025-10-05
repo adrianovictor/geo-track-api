@@ -1,3 +1,4 @@
+using System.Linq.Expressions;
 using GeoTruck.Services.Domain.Common;
 using GeoTruck.Services.Domain.Entities;
 using GeoTruck.Services.Domain.Repositories;
@@ -50,19 +51,28 @@ public class VehicleRepository : IVehicleRepository
     public async Task<Vehicle?> GetByIdAsync(int id, CancellationToken cancellationToken = default)
     {
         return await _retryPolicy.ExecuteAsync(async () =>
-            await _repository.GetFirstOrDefaultAsync<Vehicle>(v => v.Id == id, cancellationToken));
+            await _repository.GetFirstOrDefaultAsync<Vehicle>(
+                v => v.Id == id && v.Status != Domain.Enum.Status.Delete,
+                includeProperties: [v => v.Locations],
+                cancellationToken: cancellationToken));
     }
 
     public async Task<Vehicle?> GetByLicensePlateAsync(string licensePlate, CancellationToken cancellationToken = default)
     {
         return await _retryPolicy.ExecuteAsync(async () =>
-            await _repository.GetFirstOrDefaultAsync<Vehicle>(v => v.Plate.Value == licensePlate, cancellationToken));
+            await _repository.GetFirstOrDefaultAsync<Vehicle>(
+                v => v.Plate.Value == licensePlate && v.Status != Domain.Enum.Status.Delete,
+                includeProperties: [v => v.Locations],
+                cancellationToken: cancellationToken));
     }
 
     public async Task<Vehicle?> GetByRenavamAsync(string renavam, CancellationToken cancellationToken = default)
     {
         return await _retryPolicy.ExecuteAsync(async () =>
-            await _repository.GetFirstOrDefaultAsync<Vehicle>(v => v.Renavam == renavam, cancellationToken));
+            await _repository.GetFirstOrDefaultAsync<Vehicle>(
+                v => v.Renavam == renavam && v.Status != Domain.Enum.Status.Delete,
+                includeProperties: [v => v.Locations],
+                cancellationToken: cancellationToken));
     }
 
     public async Task<PagedResult<Vehicle>> GetVehiclesWithFiltersAsync(string? renavam, string? plate, string? model, string? brand, int? year, int offset, int limit, CancellationToken cancellationToken)

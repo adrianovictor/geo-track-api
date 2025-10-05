@@ -76,6 +76,14 @@ public class Vehicle : Statusable<Vehicle>
         Year = year;
     }
 
+    public void ChangeStatus(Status status)
+    {
+        if (Status == status)
+            throw new CannotChangeStatusOfADeletedEntityException();
+
+        Status = status;
+    }
+
     public void AddLocation(VehicleLocation location)
     {
         location.ThrowIfNull(nameof(location));

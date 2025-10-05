@@ -16,6 +16,14 @@
 		</rollback>
 	</changeSet>
 
+	<changeSet id="fbd96fe8-4d0b-49f7-af53-19e969dfe917" author="adriano.victor">
+		<comment>Cria para armazenar informações relacionadas à localização do veículo</comment>
+		<sqlFile path="fbd96fe8-4d0b-49f7-af53-19e969dfe917-create-table-vehicleLocation.sql" relativeToChangelogFile="true"/>
+		<rollback>
+			<sqlFile path="fbd96fe8-4d0b-49f7-af53-19e969dfe917-create-table-vehicleLocation.rollback.sql" relativeToChangelogFile="true"/>
+		</rollback>
+	</changeSet>
+
 	<changeSet id="44649076-9630-4221-9f6e-c0f28c7a4b2b" author="adriano.victor">
 		<tagDatabase tag="1.0.0"/>
 	</changeSet>

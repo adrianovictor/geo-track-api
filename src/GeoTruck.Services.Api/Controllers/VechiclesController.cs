@@ -1,5 +1,6 @@
 using GeoTruck.Services.Api.Models.Requests;
 using GeoTruck.Services.Application.Commands.CreateVehicle;
+using GeoTruck.Services.Application.Commands.DeleteVehicle;
 using GeoTruck.Services.Application.Commands.UpdateVehicle;
 using GeoTruck.Services.Application.Queries.GetAllVehicles;
 using MediatR;
@@ -9,9 +10,10 @@ namespace GeoTruck.Services.Api.Controllers
 {
     [Route("api/[controller]")]
     [ApiController]
-    public class VechiclesController(IMediator mediator) : ControllerBase
+    public class VechiclesController(IMediator mediator, ILogger<VechiclesController> logger) : ControllerBase
     {
         private readonly IMediator _mediator = mediator;
+        private readonly ILogger<VechiclesController> _logger = logger;
 
         [HttpGet]
         [Tags("Veículos")]
@@ -67,11 +69,15 @@ namespace GeoTruck.Services.Api.Controllers
             return Ok(response);
         }
 
-        [HttpDelete]
+        [HttpDelete("{id}")]
         [Tags("Veículos")]
-        public async Task<IActionResult> Delete()
+        public async Task<IActionResult> Delete(int id)
         {
-            return Ok("Veículo deletado");
+            _logger.LogInformation("Recebida solicitação para deletar veículo com ID: {Id}", id);
+            var command = new DeleteVehicleCommand(id);
+            var response = await _mediator.Send(command);
+
+            return Ok(response);
         }
     }
 }

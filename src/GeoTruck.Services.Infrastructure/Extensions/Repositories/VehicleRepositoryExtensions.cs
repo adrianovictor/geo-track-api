@@ -27,6 +27,8 @@ public static class VehicleRepositoryExtensions
         if (year.HasValue)
             vehicles = vehicles.Where(v => v.Year == year.Value);
 
+        vehicles = vehicles.Where(v => v.Status != Domain.Enum.Status.Delete);
+
         return vehicles;
     }
 

@@ -9,6 +9,8 @@ public class VehicleLocationMap : EntityMap<VehicleLocation>
 {
     protected override void Map(EntityTypeBuilder<VehicleLocation> builder)
     {
+        builder.ToTable("VehicleLocations");
+        
         builder.HasKey(e => e.Id);
         builder.Property(e => e.Latitude).IsRequired();
         builder.Property(e => e.Longitude).IsRequired();
