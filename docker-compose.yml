@@ -1,0 +1,78 @@
+services:
+  sqlserver:
+    image: mcr.microsoft.com/mssql/server:2022-latest
+    container_name: sqlserver
+    environment:
+      - ACCEPT_EULA=Y
+      - SA_PASSWORD=${SA_PASSWORD}
+      - MSSQL_PID=Developer
+    healthcheck:
+      test: >
+        /opt/mssql-tools18/bin/sqlcmd 
+        -S localhost 
+        -U sa 
+        -P "${SA_PASSWORD}" 
+        -Q "SELECT 1" 
+        -C
+        -b
+      start_period: 30s
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    ports:
+      - "1433:1433"
+    networks:
+      - geotrack-network
+    volumes:
+      - sql_data:/var/opt/mssql
+      - ${BACKUPS_DIR}:/backups:ro
+    deploy:
+      resources:
+        limits:
+          cpus: '1'
+          memory: '2GB'
+
+  db-restore-geotrackservice:
+    image: mcr.microsoft.com/mssql/server:2022-latest  # ✅ Mudança aqui
+    container_name: geotrackservice-db-restore
+    depends_on:
+      sqlserver:
+        condition: service_healthy
+    environment:
+      MSSQL_SA_PASSWORD: ${SA_PASSWORD}
+      ADMIN_USER: ${ADMIN_USER}
+      ADMIN_PASSWORD: ${ADMIN_PASSWORD}
+      DATABASE_NAME: ${DB_NAME}
+    volumes:
+      - ./scripts:/scripts:ro
+      - ${BACKUPS_DIR}:/backups:ro
+    entrypoint: /bin/bash
+    command: /scripts/restore-backups.sh
+    networks:
+      - geotrack-network
+
+  db-liquibase-geotrackservice:
+    image: liquibase/liquibase:4.29
+    container_name: db-liquibase-geotrackservice
+    command: 
+      - --searchPath=/liquibase/changelog
+      - --changeLogFile=changelog-master.xml
+      - --url=jdbc:sqlserver://sqlserver:1433;databaseName=${DB_NAME};encrypt=false;trustServerCertificate=true
+      - --username=${ADMIN_USER}
+      - --password=${ADMIN_PASSWORD}      
+      - update
+      - --context-filter=local
+    volumes:
+      - ./database/changelogs:/liquibase/changelog:ro
+    depends_on:
+      db-restore-geotrackservice:
+        condition: service_completed_successfully
+    networks:
+      - geotrack-network
+
+volumes:
+  sql_data:
+
+networks:
+  geotrack-network:
+    driver: bridge

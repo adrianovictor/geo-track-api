@@ -8,15 +8,15 @@
                                        http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-3.5.xsd"
 >
 
-	<changeSet id="4b1c6e0d-f63b-49f4-8abf-5262281f937d" author="adriano.victor">
-		<comment>Cria as tabelas referentes ao serviço de Pessoas</comment>
-		<sqlFile path="4b1c6e0d-f63b-49f4-8abf-5262281f937d-create-table-persons.sql" relativeToChangelogFile="true"/>
+	<changeSet id="3725ee63-a059-4cb7-9a8a-75290c66909a" author="adriano.victor">
+		<comment>Cria para armazenar informações relacionadas ao veículo</comment>
+		<sqlFile path="3725ee63-a059-4cb7-9a8a-75290c66909a-create-table-vehicle.sql" relativeToChangelogFile="true"/>
 		<rollback>
-			<sqlFile path="4b1c6e0d-f63b-49f4-8abf-5262281f937d-create-table-persons.rollback.sql" relativeToChangelogFile="true"/>
+			<sqlFile path="3725ee63-a059-4cb7-9a8a-75290c66909a-create-table-vehicle.rollback.sql" relativeToChangelogFile="true"/>
 		</rollback>
 	</changeSet>
 
-	<changeSet id="ed7caa0a-2fff-4321-be22-c28dd93d63a3" author="adriano.victor">
+	<changeSet id="44649076-9630-4221-9f6e-c0f28c7a4b2b" author="adriano.victor">
 		<tagDatabase tag="1.0.0"/>
 	</changeSet>
 
