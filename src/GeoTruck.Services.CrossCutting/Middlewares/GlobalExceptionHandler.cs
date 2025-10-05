@@ -2,12 +2,14 @@ using System.Net;
 using System.Text.Json;
 using GeoTruck.Services.Domain.Exceptions;
 using Microsoft.AspNetCore.Http;
+using Microsoft.Extensions.Logging;
 
 namespace GeoTruck.Services.CrossCutting.Middlewares;
 
-public class GlobalExceptionHandler(RequestDelegate next)
+public class GlobalExceptionHandler(RequestDelegate next, ILogger<GlobalExceptionHandler> logger)
 {
     private readonly RequestDelegate _next = next;
+    private readonly ILogger<GlobalExceptionHandler> _logger = logger;
 
     public async Task InvokeAsync(HttpContext context)
     {
@@ -17,7 +19,7 @@ public class GlobalExceptionHandler(RequestDelegate next)
         }
         catch (Exception ex)
         {
-            //_logger.LogError(ex, "Ocorreu uma exceção não tratada");
+            _logger.LogError(ex, "Ocorreu uma exceção não tratada");
             await HandleExceptionAsync(context, ex);
         }
     }

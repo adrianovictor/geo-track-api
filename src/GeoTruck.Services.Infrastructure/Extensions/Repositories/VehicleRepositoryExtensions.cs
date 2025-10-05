@@ -16,7 +16,7 @@ public static class VehicleRepositoryExtensions
             vehicles = vehicles.Where(v => v.Renavam.Contains(renavam));
 
         if (!string.IsNullOrEmpty(plate))
-            vehicles = vehicles.Where(v => v.Plate.Contains(plate));
+            vehicles = vehicles.Where(v => v.Plate.Value.Contains(plate));
 
         if (!string.IsNullOrEmpty(model))
             vehicles = vehicles.Where(v => v.Model.Contains(model));
