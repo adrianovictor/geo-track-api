@@ -11,16 +11,10 @@ public class VehicleMap : StatusableMap<Vehicle>
     protected override void Map(EntityTypeBuilder<Vehicle> builder)
     {
         builder.ToTable("Vehicles");
-        
+
         builder.HasKey(e => e.Id);
         builder.Property(e => e.UniqueId).IsRequired();
-        builder.Property(e => e.Plate)
-            .HasConversion(
-                v => v.Value,
-                v => new BrazilianPlate(v)
-            )
-            .IsRequired()
-            .HasMaxLength(10);
+        builder.OwnsOne(_ => _.Plate).Property(_ => _.Value).IsRequired().HasMaxLength(10).HasColumnName("Plate");
         
         builder.Property(e => e.Renavam).IsRequired().HasMaxLength(20);
         builder.Property(e => e.Model).IsRequired().HasMaxLength(50);

@@ -9,6 +9,7 @@ public class VehicleDto
     public string Brand { get; set; }
     public int Year { get; set; }
     public string Renavam { get; set; }
+    public List<VehicleLocationDto> Locations { get; set; } = [];
 
     public static VehicleDto Create(int id, Guid uniqueId, string licensePlate, string model, string brand, int year, string renavam) =>
         new VehicleDto
@@ -20,5 +21,18 @@ public class VehicleDto
             Brand = brand,
             Year = year,
             Renavam = renavam
+        };
+    
+    public static VehicleDto Create(int id, Guid uniqueId, string licensePlate, string model, string brand, int year, string renavam, List<VehicleLocationDto> locations) =>
+        new VehicleDto
+        {
+            Id = id,
+            UniqueId = uniqueId,
+            Plate = licensePlate,
+            Model = model,
+            Brand = brand,
+            Year = year,
+            Renavam = renavam,
+            Locations = locations
         };
 }

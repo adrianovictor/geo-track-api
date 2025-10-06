@@ -60,10 +60,16 @@ public class VehicleRepository : IVehicleRepository
     public async Task<Vehicle?> GetByLicensePlateAsync(string licensePlate, CancellationToken cancellationToken = default)
     {
         return await _retryPolicy.ExecuteAsync(async () =>
-            await _repository.GetFirstOrDefaultAsync<Vehicle>(
-                v => v.Plate.Value == licensePlate && v.Status != Domain.Enum.Status.Delete,
-                includeProperties: [v => v.Locations],
-                cancellationToken: cancellationToken));
+        {
+            _logger.LogDebug("Buscando veículo com localizações por placa: {Plate}", licensePlate);
+
+        var vehicle = await _repository.GetQueryable<Vehicle>()
+            .Include(v => v.Locations.OrderBy(l => l.Date))
+                .Where(v => v.Plate.Value == licensePlate && v.Status != Domain.Enum.Status.Delete)
+                .SingleOrDefaultAsync(cancellationToken);
+            
+            return vehicle;
+        });
     }
 
     public async Task<Vehicle?> GetByRenavamAsync(string renavam, CancellationToken cancellationToken = default)

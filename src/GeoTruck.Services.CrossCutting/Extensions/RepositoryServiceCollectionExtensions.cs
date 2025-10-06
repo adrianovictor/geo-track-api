@@ -1,4 +1,3 @@
-using System;
 using GeoTruck.Services.Domain.Repositories;
 using GeoTruck.Services.Infrastructure.Repositories;
 using GeoTruck.Services.Infrastructure.Repositories.Common;
@@ -12,6 +11,7 @@ public static class RepositoryServiceCollectionExtensions
     {
         services.AddScoped<IRepository, EntityRepository>();
         services.AddScoped<IVehicleRepository, VehicleRepository>();
+        services.AddScoped<IVehicleLocationRepository, VehicleLocationRepository>();
 
         return services;
     }

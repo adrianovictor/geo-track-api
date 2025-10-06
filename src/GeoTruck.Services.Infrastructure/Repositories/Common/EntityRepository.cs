@@ -41,7 +41,7 @@ public class EntityRepository(ApplicationDbContext context) : IRepository, IDisp
 
     public IQueryable<T> GetQueryable<T>() where T : class, IEntity<T>
     {
-        return _context.Set<T>().AsNoTracking();
+        return _context.Set<T>();//.AsNoTracking();
     }
 
     public async Task<T?> GetFirstOrDefaultAsync<T>(
@@ -67,11 +67,11 @@ public class EntityRepository(ApplicationDbContext context) : IRepository, IDisp
 
     public async Task SaveAsync<T>(T entity, bool disableValidationOnSave) where T : class, IEntity<T>
     {
-        if (entity.IsPersisted())
-        {
-            _context.Entry(entity).State = EntityState.Modified;
-        }
-        else
+        if (!entity.IsPersisted())
+        // {
+        //     _context.Entry(entity).State = EntityState.Modified;
+        // }
+        // else
         {
             _context.Set<T>().Add(entity);
         }
