@@ -14,10 +14,10 @@ namespace GeoTruck.Services.Api.Controllers
 {
     [Route("api/[controller]")]
     [ApiController]
-    public class VechiclesController(IMediator mediator, ILogger<VechiclesController> logger) : ControllerBase
+    public class VehiclesController(IMediator mediator, ILogger<VehiclesController> logger) : ControllerBase
     {
         private readonly IMediator _mediator = mediator;
-        private readonly ILogger<VechiclesController> _logger = logger;
+        private readonly ILogger<VehiclesController> _logger = logger;
 
         #region GET
         [HttpGet]
