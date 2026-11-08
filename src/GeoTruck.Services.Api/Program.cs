@@ -33,7 +33,7 @@ if (app.Environment.IsDevelopment())
     app.MapScalarApiReference(options => options
         .WithTitle("API Documentation")
         .WithTheme(ScalarTheme.Default)
-        .WithDarkMode());
+        .EnableDarkMode());
 }
 
 // app.MapScalarApiReference("documentation"); // Removed because no such method exists for WebApplication
