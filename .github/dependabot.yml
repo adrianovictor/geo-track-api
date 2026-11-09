@@ -1,0 +1,18 @@
+version: 2
+updates:
+  # Pacotes NuGet de todos os projetos da solução. A lib em libs/ tem o próprio Dependabot.
+  - package-ecosystem: nuget
+    directory: /
+    schedule:
+      interval: weekly
+    groups:
+      # Os pacotes do EF Core e do ASP.NET Core sobem juntos, na mesma versão.
+      microsoft:
+        patterns: ["Microsoft.EntityFrameworkCore*", "Microsoft.AspNetCore*"]
+      testes:
+        patterns: ["xunit*", "Testcontainers*"]
+
+  - package-ecosystem: github-actions
+    directory: /
+    schedule:
+      interval: monthly

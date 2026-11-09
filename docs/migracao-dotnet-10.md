@@ -147,4 +147,4 @@ ConnectionStrings__DefaultConnection="Server=.;Database=GeoTrackDb;Integrated Se
 
 A documentação da API fica em `http://localhost:5108/scalar/v1`.
 
-Quem não tem SQL Server instalado pode subir o banco pelo `docker-compose.yml` da raiz. Atenção: o compose lê a variável `DB_NAME`, mas o `.env.exemple` define `DB_PERSONS_NAME`. Até essa correção entrar, defina `DB_NAME=GeoTrackDb` no seu `.env`.
+Quem não tem SQL Server instalado pode subir o banco pelo `docker-compose.yml` da raiz. Copie o `.env.example` para `.env` e preencha os valores (o nome do banco vai em `DB_NAME`).

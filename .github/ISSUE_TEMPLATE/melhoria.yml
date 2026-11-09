@@ -1,0 +1,24 @@
+name: Melhoria
+description: Funcionalidade nova ou mudança em algo que já existe.
+title: "feat: "
+labels: [enhancement]
+body:
+  - type: textarea
+    id: problema
+    attributes:
+      label: Qual problema resolve
+      description: Quem é afetado e o que hoje não dá para fazer, ou dá com dificuldade.
+    validations:
+      required: true
+  - type: textarea
+    id: proposta
+    attributes:
+      label: Proposta
+      description: Como deveria funcionar. Inclua o contrato da API, se mudar.
+    validations:
+      required: true
+  - type: textarea
+    id: impacto
+    attributes:
+      label: Impacto no front (geo-track-app)
+      description: Se a mudança quebra ou exige algo no front.
