@@ -1,0 +1,32 @@
+name: CI
+
+on:
+  push:
+    branches: [master]
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  build-and-test:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: actions/setup-dotnet@v6
+        with:
+          global-json-file: global.json
+
+      # A auditoria do NuGet roda aqui e avisa sobre pacotes vulneráveis, inclusive os indiretos.
+      - name: Restore
+        run: dotnet restore GeoTrack.sln
+
+      - name: Build
+        run: dotnet build GeoTrack.sln --configuration Release --no-restore
+
+      # O runner já tem Docker: o Testcontainers sobe um SQL Server descartável
+      # e aplica os scripts do Liquibase antes dos testes.
+      - name: Testes de integração
+        run: dotnet test --solution GeoTrack.sln --configuration Release --no-build
