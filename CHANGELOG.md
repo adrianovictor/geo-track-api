@@ -8,6 +8,7 @@ As mudanças de cada versão, da mais recente para a mais antiga. O formato segu
 
 - README, licença MIT, `CHANGELOG.md`, `CODEOWNERS`, templates de issue e Dependabot (NuGet e GitHub Actions).
 - `.editorconfig` e verificação de formatação (`dotnet format`) no CI.
+- O Dependabot não propõe versões major do MediatR: a partir da v13 ele tem licença comercial.
 
 ### Corrigido
 
