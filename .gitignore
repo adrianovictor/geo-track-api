@@ -65,6 +65,8 @@ esdata/
 # Local History for Visual Studio Code
 .history/
 
+articles/
+
 # Built Visual Studio Code Extensions
 *.vsix
 

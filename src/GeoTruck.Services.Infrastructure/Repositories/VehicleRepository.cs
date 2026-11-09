@@ -83,6 +83,11 @@ public class VehicleRepository : IVehicleRepository
 
     public async Task<PagedResult<Vehicle>> GetVehiclesWithFiltersAsync(string? renavam, string? plate, string? model, string? brand, int? year, int offset, int limit, CancellationToken cancellationToken)
     {
+        // Valores fora do intervalo são corrigidos em vez de gerar erro. Sem isso, limit=0 dividia por zero
+        // no cálculo da página.
+        offset = Math.Max(0, offset);
+        limit = Math.Max(1, limit);
+
         try
         {
             _logger.LogInformation(

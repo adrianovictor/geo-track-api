@@ -112,12 +112,13 @@ namespace GeoTruck.Services.Api.Controllers
                 "Processando upload de {Count} posições de rota",
                 positions.Count);
 
-            await _mediator.Send(new UploadVehicleLocationsCommand(positions));
+            var savedPositions = await _mediator.Send(new UploadVehicleLocationsCommand(positions));
 
             return Ok(new
             {
                 message = "Upload processado com sucesso.",
-                processedPositions = positions.Count,
+                // Só as posições gravadas: placa desconhecida e posição repetida não contam.
+                processedPositions = savedPositions,
                 timestamp = DateTime.UtcNow
             });
         }

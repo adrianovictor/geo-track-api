@@ -32,10 +32,16 @@ public static class VehicleRepositoryExtensions
         return vehicles;
     }
 
-    public static IQueryable<T> Paginate<T>(this IQueryable<T> query, int offset, int limit)
+    /// <summary>
+    /// Pula <paramref name="offset"/> registros e pega os <paramref name="limit"/> seguintes.
+    /// O front pede <c>Offset = (página - 1) * Limit</c>. A ordem por Id garante que as páginas
+    /// não se repitam nem pulem registros entre uma chamada e outra.
+    /// </summary>
+    public static IQueryable<Vehicle> Paginate(this IQueryable<Vehicle> query, int offset, int limit)
     {
         return query
-            .Skip(Math.Max(0, offset - 1))
-            .Take(Math.Max(1, limit));
-    }    
+            .OrderBy(v => v.Id)
+            .Skip(offset)
+            .Take(limit);
+    }
 }

@@ -51,6 +51,7 @@ public class UploadPositionsTests(GeoTrackApiFactory factory) : ApiTestBase(fact
 
         Assert.Equal(HttpStatusCode.OK, second.StatusCode);
         Assert.Single((await GetVehicleAsync(vehicle.Id)).Locations);
+        Assert.Equal(0, (await ReadJsonAsync(second)).GetProperty("processedPositions").GetInt32());
     }
 
     [Fact]
@@ -65,8 +66,8 @@ public class UploadPositionsTests(GeoTrackApiFactory factory) : ApiTestBase(fact
         Assert.Equal(HttpStatusCode.OK, response.StatusCode);
         Assert.Single((await GetVehicleAsync(vehicle.Id)).Locations);
 
-        // BUG CONHECIDO: a resposta conta as posições enviadas, não as gravadas: diz 2 quando só 1 entrou.
-        Assert.Equal(2, (await ReadJsonAsync(response)).GetProperty("processedPositions").GetInt32());
+        // A resposta conta só as posições gravadas.
+        Assert.Equal(1, (await ReadJsonAsync(response)).GetProperty("processedPositions").GetInt32());
     }
 
     // Os erros de arquivo saem em ProblemDetails: a mensagem vai em "detail" (que o front mostra)
@@ -81,7 +82,8 @@ public class UploadPositionsTests(GeoTrackApiFactory factory) : ApiTestBase(fact
 
         var problem = await AssertProblemAsync(response, HttpStatusCode.BadRequest);
         Assert.Equal(message, problem.Detail);
-        Assert.Equal([message], problem.Errors?["file"]);
+        Assert.NotNull(problem.Errors);
+        Assert.Equal([message], problem.Errors["file"]);
     }
 
     [Fact]

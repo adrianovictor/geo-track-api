@@ -5,7 +5,7 @@ using Microsoft.EntityFrameworkCore.Metadata.Builders;
 namespace GeoTruck.Services.Infrastructure.Mappings.Common;
 
 public abstract class StatusableMap<TEntity> : EntityMap<TEntity>
-    where TEntity : Statusable<TEntity>, IEntity<TEntity>
+    where TEntity : Statusable
 {
     public override void Configure(EntityTypeBuilder<TEntity> builder)
     {

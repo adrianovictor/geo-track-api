@@ -1,8 +1,8 @@
-using GeoTruck.Services.Domain.Common;
+using Core.Common.Domain.Entities;
 
 namespace GeoTruck.Services.Domain.Entities;
 
-public class VehicleLocation : Entity<VehicleLocation>
+public class VehicleLocation : AuditableEntity<int>
 {
     public int VehicleId { get; protected set; }
     public virtual Vehicle Vehicle { get; protected set; }
