@@ -23,7 +23,7 @@ public class UploadVehicleLocationsHandler(IVehicleRepository vehicleRepository,
             var addedForVehicle = 0;
 
             var vehicle = await vehicleRepository.GetByLicensePlateAsync(plate, cancellationToken);
-            
+
             if (vehicle == null)
             {
                 logger.LogWarning(
@@ -47,7 +47,7 @@ public class UploadVehicleLocationsHandler(IVehicleRepository vehicleRepository,
                         "Adicionando localização {PositionId} para veículo {Plate}",
                         location.PositionId,
                         plate);
-                        
+
                     vehicle.AddLocation(VehicleLocation.Create(
                         vehicle: vehicle,
                         latitude: location.Latitude,
@@ -74,7 +74,7 @@ public class UploadVehicleLocationsHandler(IVehicleRepository vehicleRepository,
 
             await vehicleRepository.SaveAsync(vehicle);
             added += addedForVehicle;
-        }            
+        }
 
         return added;
     }

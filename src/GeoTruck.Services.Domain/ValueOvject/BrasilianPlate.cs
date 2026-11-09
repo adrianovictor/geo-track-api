@@ -5,7 +5,7 @@ namespace GeoTruck.Services.Domain.ValueOvject;
 public class BrazilianPlate
 {
     public string Value { get; }
-    
+
     public BrazilianPlate(string value)
     {
         value.ThrowIfNullOrWhiteSpace("plate");

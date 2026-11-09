@@ -10,7 +10,7 @@ public class VehicleLocationMap : EntityMap<VehicleLocation>
     protected override void Map(EntityTypeBuilder<VehicleLocation> builder)
     {
         builder.ToTable("VehicleLocations");
-        
+
         builder.HasKey(e => e.Id);
         builder.Property(e => e.PositionId).IsRequired();
         builder.Property(e => e.Latitude).IsRequired().HasColumnType("decimal(9,6)");
