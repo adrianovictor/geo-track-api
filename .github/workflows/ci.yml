@@ -29,6 +29,12 @@ jobs:
       - name: Build
         run: dotnet build GeoTrack.sln --configuration Release --no-restore
 
+      # Falha se algum arquivo estiver fora do padrão do .editorconfig.
+      # Para corrigir localmente: dotnet format GeoTrack.sln --exclude libs/
+      # A lib em libs/ fica de fora, porque tem o próprio CI.
+      - name: Formatação
+        run: dotnet format GeoTrack.sln --exclude libs/ --verify-no-changes --no-restore
+
       # O runner já tem Docker: o Testcontainers sobe um SQL Server descartável
       # e aplica os scripts do Liquibase antes dos testes.
       - name: Testes de integração
