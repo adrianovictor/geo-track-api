@@ -12,20 +12,14 @@ using Polly.Retry;
 
 namespace GeoTruck.Services.Infrastructure.Repositories;
 
-public class VehicleRepository : IVehicleRepository
+public class VehicleRepository(IRepository repository, ILogger<VehicleRepository> logger) : IVehicleRepository
 {
-    private readonly AsyncRetryPolicy _retryPolicy;
-    private readonly IRepository _repository;
-    private readonly ILogger<VehicleRepository> _logger;
+    private readonly AsyncRetryPolicy _retryPolicy = CreateRetryPolicy(logger);
 
-    public VehicleRepository(IRepository repository, ILogger<VehicleRepository> logger)
-    {
-        _repository = repository;
-        _logger = logger;
-
-        _retryPolicy = Policy
+    private static AsyncRetryPolicy CreateRetryPolicy(ILogger logger) =>
+        Policy
             .Handle<DbUpdateException>()
-            .Or<SqlException>(ex => 
+            .Or<SqlException>(ex =>
                 ex.Number == -2 ||      // Timeout
                 ex.Number == 1205 ||    // Deadlock
                 ex.Number == 50000)     // Erro personalizado
@@ -33,25 +27,24 @@ public class VehicleRepository : IVehicleRepository
                 TimeSpan.FromSeconds(Math.Pow(2, retryAttempt)),
                 onRetry: (exception, timeSpan, retryCount, context) =>
                 {
-                    _logger.LogWarning(
+                    logger.LogWarning(
                         exception,
                         "Tentativa {RetryCount} de 3 após {DelayMs}ms devido a {ExceptionType}: {Message}",
-                        retryCount, 
+                        retryCount,
                         timeSpan.TotalMilliseconds,
                         exception.GetType().Name,
                         exception.Message);
                 });
-    }
 
     public Task DeleteAsync(Vehicle vehicle)
     {
-        return _repository.DeleteAsync(vehicle);
+        return repository.DeleteAsync(vehicle);
     }
 
     public async Task<Vehicle?> GetByIdAsync(int id, CancellationToken cancellationToken = default)
     {
         return await _retryPolicy.ExecuteAsync(async () =>
-            await _repository.GetFirstOrDefaultAsync<Vehicle>(
+            await repository.GetFirstOrDefaultAsync<Vehicle>(
                 v => v.Id == id && v.Status != Domain.Enum.Status.Delete,
                 includeProperties: [v => v.Locations],
                 cancellationToken: cancellationToken));
@@ -61,9 +54,9 @@ public class VehicleRepository : IVehicleRepository
     {
         return await _retryPolicy.ExecuteAsync(async () =>
         {
-            _logger.LogDebug("Buscando veículo com localizações por placa: {Plate}", licensePlate);
+            logger.LogDebug("Buscando veículo com localizações por placa: {Plate}", licensePlate);
 
-        var vehicle = await _repository.GetQueryable<Vehicle>()
+        var vehicle = await repository.GetQueryable<Vehicle>()
             .Include(v => v.Locations.OrderBy(l => l.Date))
                 .Where(v => v.Plate.Value == licensePlate && v.Status != Domain.Enum.Status.Delete)
                 .SingleOrDefaultAsync(cancellationToken);
@@ -75,7 +68,7 @@ public class VehicleRepository : IVehicleRepository
     public async Task<Vehicle?> GetByRenavamAsync(string renavam, CancellationToken cancellationToken = default)
     {
         return await _retryPolicy.ExecuteAsync(async () =>
-            await _repository.GetFirstOrDefaultAsync<Vehicle>(
+            await repository.GetFirstOrDefaultAsync<Vehicle>(
                 v => v.Renavam == renavam && v.Status != Domain.Enum.Status.Delete,
                 includeProperties: [v => v.Locations],
                 cancellationToken: cancellationToken));
@@ -90,11 +83,11 @@ public class VehicleRepository : IVehicleRepository
 
         try
         {
-            _logger.LogInformation(
+            logger.LogInformation(
                 "Buscando veículos com filtros- Renavam: {Renavam}, Plate: {Plate}, Offset: {Offset}, Limit: {Limit}",
                 renavam, plate, offset, limit);
 
-            var query = _repository.GetQueryable<Vehicle>(); 
+            var query = repository.GetQueryable<Vehicle>(); 
             var filteredQuery = query.ApplyFilters(renavam, plate, model, brand, year); 
 
             var totalRecords = await filteredQuery.CountAsync(cancellationToken); 
@@ -103,7 +96,7 @@ public class VehicleRepository : IVehicleRepository
                 .Paginate(offset, limit)
                 .ToListAsync(cancellationToken);
 
-            _logger.LogInformation("Retornados {Count} veículos de {Total}", vehicles.Count, totalRecords);
+            logger.LogInformation("Retornados {Count} veículos de {Total}", vehicles.Count, totalRecords);
             return new PagedResult<Vehicle>(
                 Items: vehicles,
                 TotalRecords: totalRecords,
@@ -113,7 +106,7 @@ public class VehicleRepository : IVehicleRepository
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Erro ao obter veículos com filtros");
+            logger.LogError(ex, "Erro ao obter veículos com filtros");
             throw;            
         }
     }
@@ -121,19 +114,19 @@ public class VehicleRepository : IVehicleRepository
     public Task<bool> IsRenavamInUseAsync(string renavam, int? exceptVehicleId = null, CancellationToken cancellationToken = default)
     {
         return _retryPolicy.ExecuteAsync(() =>
-            _repository.GetQueryable<Vehicle>()
+            repository.GetQueryable<Vehicle>()
                 .AnyAsync(v => v.Renavam == renavam && v.Id != exceptVehicleId, cancellationToken));
     }
 
     public Task<bool> IsPlateInUseAsync(string plate, int? exceptVehicleId = null, CancellationToken cancellationToken = default)
     {
         return _retryPolicy.ExecuteAsync(() =>
-            _repository.GetQueryable<Vehicle>()
+            repository.GetQueryable<Vehicle>()
                 .AnyAsync(v => v.Plate.Value == plate && v.Id != exceptVehicleId, cancellationToken));
     }
 
     public Task SaveAsync(Vehicle vehicle)
     {
-        return _repository.SaveAsync(vehicle);
+        return repository.SaveAsync(vehicle);
     }
 }
