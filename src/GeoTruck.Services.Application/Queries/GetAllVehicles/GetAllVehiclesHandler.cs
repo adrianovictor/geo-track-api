@@ -1,5 +1,4 @@
 using GeoTruck.Services.Application.DTOs;
-using GeoTruck.Services.Domain.Exceptions;
 using GeoTruck.Services.Domain.Repositories;
 using MediatR;
 using Microsoft.Extensions.Logging;
@@ -27,12 +26,7 @@ public class GetAllVehiclesHandler(IVehicleRepository repository, ILogger<GetAll
         var vehicles = pagedResult.Items;
         var totalRecords = pagedResult.TotalRecords;
 
-        if (!vehicles.Any())
-        {
-            _logger.LogWarning("Nenhum veículo encontrado com os filtros fornecidos.");
-            throw new NoVehiclesFoundException();
-        }
-
+        // Nenhum veículo com os filtros é resultado, não erro: responde 200 com a lista vazia.
         return new GetAllVehiclesResponse
         {
             Vehicles = vehicles.Select(v => VehicleDto.Create(

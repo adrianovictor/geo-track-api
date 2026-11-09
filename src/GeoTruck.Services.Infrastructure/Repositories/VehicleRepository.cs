@@ -113,6 +113,20 @@ public class VehicleRepository : IVehicleRepository
         }
     }
 
+    public Task<bool> IsRenavamInUseAsync(string renavam, int? exceptVehicleId = null, CancellationToken cancellationToken = default)
+    {
+        return _retryPolicy.ExecuteAsync(() =>
+            _repository.GetQueryable<Vehicle>()
+                .AnyAsync(v => v.Renavam == renavam && v.Id != exceptVehicleId, cancellationToken));
+    }
+
+    public Task<bool> IsPlateInUseAsync(string plate, int? exceptVehicleId = null, CancellationToken cancellationToken = default)
+    {
+        return _retryPolicy.ExecuteAsync(() =>
+            _repository.GetQueryable<Vehicle>()
+                .AnyAsync(v => v.Plate.Value == plate && v.Id != exceptVehicleId, cancellationToken));
+    }
+
     public Task SaveAsync(Vehicle vehicle)
     {
         return _repository.SaveAsync(vehicle);

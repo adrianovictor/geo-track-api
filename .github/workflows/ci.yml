@@ -13,7 +13,10 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 15
     steps:
+      # A lib core-common-components entra como submodule em libs/.
       - uses: actions/checkout@v7
+        with:
+          submodules: true
 
       - uses: actions/setup-dotnet@v6
         with:

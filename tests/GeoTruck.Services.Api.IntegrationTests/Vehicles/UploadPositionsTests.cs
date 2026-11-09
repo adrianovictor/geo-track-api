@@ -65,37 +65,32 @@ public class UploadPositionsTests(GeoTrackApiFactory factory) : ApiTestBase(fact
         Assert.Equal(HttpStatusCode.OK, response.StatusCode);
         Assert.Single((await GetVehicleAsync(vehicle.Id)).Locations);
 
-        // A resposta conta as posições enviadas, não as gravadas: diz 2 quando só 1 entrou.
+        // BUG CONHECIDO: a resposta conta as posições enviadas, não as gravadas: diz 2 quando só 1 entrou.
         Assert.Equal(2, (await ReadJsonAsync(response)).GetProperty("processedPositions").GetInt32());
     }
 
+    // Os erros de arquivo saem em ProblemDetails: a mensagem vai em "detail" (que o front mostra)
+    // e também em errors.file.
+    [Theory]
+    [InlineData("{ isto não é json", "posicoes.json", "application/json", "Formato JSON inválido.")]
+    [InlineData("[]", "posicoes.json", "application/json", "Arquivo vazio ou sem posições válidas.")]
+    [InlineData("placa;lat;lng", "posicoes.csv", "text/csv", "Apenas arquivos JSON (.json) são permitidos.")]
+    public async Task InvalidFileIsRejectedOnTheFileField(string content, string fileName, string contentType, string message)
+    {
+        using var response = await UploadAsync(content, fileName, contentType);
+
+        var problem = await AssertProblemAsync(response, HttpStatusCode.BadRequest);
+        Assert.Equal(message, problem.Detail);
+        Assert.Equal([message], problem.Errors?["file"]);
+    }
+
     [Fact]
-    public async Task InvalidJsonIsRejected()
+    public async Task InvalidJsonDoesNotExposeTheDeserializerMessage()
     {
         using var response = await UploadAsync("{ isto não é json");
 
-        Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
         var body = await ReadJsonAsync(response);
-        Assert.Equal("Formato JSON inválido.", body.GetProperty("error").GetString());
-        // A resposta também devolve a mensagem interna do desserializador no campo "details".
-        Assert.True(body.TryGetProperty("details", out _));
-    }
-
-    [Fact]
-    public async Task EmptyListIsRejected()
-    {
-        using var response = await UploadAsync("[]");
-
-        Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
-        Assert.Equal("Arquivo vazio ou sem posições válidas.", (await ReadJsonAsync(response)).GetProperty("error").GetString());
-    }
-
-    [Fact]
-    public async Task NonJsonFileIsRejected()
-    {
-        using var response = await UploadAsync("placa;lat;lng", fileName: "posicoes.csv", contentType: "text/csv");
-
-        Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
-        Assert.Equal("Apenas arquivos JSON (.json) são permitidos.", (await ReadJsonAsync(response)).GetProperty("error").GetString());
+        Assert.False(body.TryGetProperty("details", out _));
+        Assert.DoesNotContain("LineNumber", body.GetRawText());
     }
 }

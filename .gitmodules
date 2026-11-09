@@ -1,0 +1,3 @@
+[submodule "libs/core-common-components"]
+	path = libs/core-common-components
+	url = https://github.com/adrianovictor/core-common-components.git

@@ -1,3 +1,5 @@
+using Core.Common.Domain.Exceptions;
+
 namespace GeoTruck.Services.Domain.Exceptions;
 
 public class CannotChangeStatusOfADeletedEntityException : DomainException

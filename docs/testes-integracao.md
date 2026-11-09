@@ -12,7 +12,10 @@ Os testes sobem a API inteira em memória (`WebApplicationFactory`) e falam com 
 
 Pré-requisitos: SDK do .NET 10 e Docker.
 
+A lib `core-common-components` entra como submodule em `libs/`. Num clone novo, baixe-a antes do build:
+
 ```bash
+git submodule update --init   # ou clone com: git clone --recurse-submodules
 dotnet test --solution GeoTrack.sln
 ```
 
@@ -33,21 +36,37 @@ Use `127.0.0.1`, não `localhost`. Com `localhost`, o SQL Client tenta primeiro 
 
 O workflow `.github/workflows/ci.yml` roda restore, build e testes a cada push no `master` e em todo pull request. O runner `ubuntu-latest` já tem Docker, então não precisa de configuração extra.
 
+## Formato dos erros
+
+Todo erro sai em `application/problem+json` ([RFC 9457](https://www.rfc-editor.org/rfc/rfc9457)), pelo tratamento da lib `core-common-components` (`AddDomainProblemDetails`). A mensagem para o usuário fica em `detail`. Nos erros de validação, `errors` traz as mensagens por campo:
+
+```json
+{
+  "status": 400,
+  "title": "Dados inválidos",
+  "detail": "O campo 'plate' não é uma placa brasileira válida (ABC1234, ABC-1234 ou ABC1D23).",
+  "errors": { "plate": ["O campo 'plate' não é uma placa brasileira válida (ABC1234, ABC-1234 ou ABC1D23)."] }
+}
+```
+
+| Situação | Status |
+|---|---|
+| Campo inválido (domínio ou `[ApiController]`) | 400 com `errors` |
+| Veículo inexistente ou excluído | 404 |
+| RENAVAM ou placa já usados por outro veículo, inclusive excluído | 409 |
+| Outra regra de negócio | 422 |
+| Erro inesperado | 500, sem a mensagem interna |
+
 ## Bugs conhecidos registrados nos testes
 
 Os testes registram o comportamento **atual** da API, inclusive o que está errado. Cada caso traz um comentário `BUG CONHECIDO` com o comportamento correto. Quando a correção entrar, o teste muda junto, e o diff do PR mostra exatamente o que mudou para quem usa a API.
 
 | Cenário | Hoje | Correto |
 |---|---|---|
-| Veículo inexistente (GET, PUT) | 400 | 404 |
-| Veículo inexistente ou já excluído (DELETE) | 200 `false` | 404 |
-| Exclusão com sucesso | 200 `true` | 204 |
-| Listagem sem resultados | 400 | 200 com lista vazia |
-| RENAVAM duplicado | 400 | 409 |
-| Placa duplicada | 500 (índice único do banco) | 409 |
-| Placa inválida, ano fora do intervalo | 500 | 400 com o erro no campo |
-| `offset` da listagem | pula registros, e as páginas se repetem | número da página, com `OrderBy` |
+| `offset` da listagem | `Skip(offset - 1)`: a página 2 repete o último veículo da página 1 | `Skip(offset)`, com padrão 0 e `OrderBy` (o front envia `(página - 1) * Limit`) |
 | Upload com placa desconhecida | `processedPositions` conta as posições ignoradas | contar só as gravadas |
-| Upload com JSON inválido | devolve a mensagem interna do desserializador | só a mensagem de erro |
+| Campo maior que a coluna (RENAVAM 20, modelo e marca 50) | 500 | 400 com o erro no campo |
+
+Corrigidos no PR 3: os status de veículo inexistente (404), exclusão (204), listagem vazia (200), duplicidade (409), validação (400 com `errors`) e a mensagem interna do desserializador no upload.
 
 Para listar os casos no código: `grep -rn "BUG CONHECIDO" tests/`.

@@ -1,5 +1,4 @@
 using GeoTruck.Services.CrossCutting.Extensions;
-using GeoTruck.Services.CrossCutting.Middlewares;
 using Scalar.AspNetCore;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -19,12 +18,17 @@ builder.Services.AddCors(options =>
 });
 
 builder.Services.AddControllers();
+// Erros em application/problem+json (RFC 9457). As exceções do domínio viram 400, 404, 409 ou 422;
+// as demais viram 500 sem expor a mensagem.
+builder.Services.AddDomainProblemDetails();
 // Learn more about configuring OpenAPI at https://aka.ms/aspnet/openapi
 builder.Services.AddOpenApi();
 builder.Services.AddDbContextExtensions(builder.Configuration);
 builder.Services.AddRepositoryService();
 
 var app = builder.Build();
+
+app.UseExceptionHandler();
 
 // Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment())
@@ -36,8 +40,6 @@ if (app.Environment.IsDevelopment())
         .EnableDarkMode());
 }
 
-// app.MapScalarApiReference("documentation"); // Removed because no such method exists for WebApplication
-app.UseMiddleware<GlobalExceptionHandler>();
 app.UseHttpsRedirection();
 
 app.UseAuthorization();
