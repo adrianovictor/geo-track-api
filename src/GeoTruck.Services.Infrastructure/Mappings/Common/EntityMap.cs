@@ -1,11 +1,11 @@
-using GeoTruck.Services.Domain.Common;
+using Core.Common.Domain.Entities;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
 namespace GeoTruck.Services.Infrastructure.Mappings.Common;
 
 public abstract class EntityMap<TEntity> : IEntityTypeConfiguration<TEntity>
-    where TEntity : class, IEntity<TEntity>
+    where TEntity : AuditableEntity<int>
 {
     public virtual void Configure(EntityTypeBuilder<TEntity> builder)
     {

@@ -1,5 +1,5 @@
 using System.Linq.Expressions;
-using GeoTruck.Services.Domain.Common;
+using Core.Common.Domain.Entities;
 using GeoTruck.Services.Infrastructure.DataContext;
 using Microsoft.EntityFrameworkCore;
 
@@ -28,18 +28,18 @@ public class EntityRepository(ApplicationDbContext context) : IRepository, IDisp
         }
     }
 
-    public async Task DeleteAsync<T>(T entity) where T : class, IEntity<T>
+    public async Task DeleteAsync<T>(T entity) where T : Entity<int>
     {
         _context.Set<T>().Remove(entity);
         await _context.SaveChangesAsync();
     }
 
-    public IQueryable<T> GetAllAsync<T>() where T : class, IEntity<T>
+    public IQueryable<T> GetAllAsync<T>() where T : Entity<int>
     {
         return _context.Set<T>();
     }
 
-    public IQueryable<T> GetQueryable<T>() where T : class, IEntity<T>
+    public IQueryable<T> GetQueryable<T>() where T : Entity<int>
     {
         return _context.Set<T>();//.AsNoTracking();
     }
@@ -48,7 +48,7 @@ public class EntityRepository(ApplicationDbContext context) : IRepository, IDisp
         Expression<Func<T, bool>> predicate,
         Expression<Func<T, object>>[] includeProperties = null,
         CancellationToken cancellationToken = default
-    ) where T : class, IEntity<T>
+    ) where T : Entity<int>
     {
         IQueryable<T> query = _context.Set<T>();
 
@@ -65,9 +65,9 @@ public class EntityRepository(ApplicationDbContext context) : IRepository, IDisp
             .FirstOrDefaultAsync(cancellationToken);
     }
 
-    public async Task SaveAsync<T>(T entity, bool disableValidationOnSave) where T : class, IEntity<T>
+    public async Task SaveAsync<T>(T entity, bool disableValidationOnSave) where T : Entity<int>
     {
-        if (!entity.IsPersisted())
+        if (entity.IsTransient())
         // {
         //     _context.Entry(entity).State = EntityState.Modified;
         // }

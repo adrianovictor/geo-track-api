@@ -1,4 +1,4 @@
-using GeoTruck.Services.Domain.Common;
+using Core.Common.Domain.Entities;
 using GeoTruck.Services.Domain.Entities;
 using GeoTruck.Services.Infrastructure.Mappings.Vehicles;
 using Microsoft.EntityFrameworkCore;
@@ -75,16 +75,23 @@ public class ApplicationDbContext(DbContextOptions<ApplicationDbContext> options
 
         foreach (var entry in modifyEntries)
         {
-            var auditEntity = entry.Key as IAuditing;
-
-            if (entry.Value == EntityState.Added && auditEntity != null)
+            if (entry.Key is not IAuditable)
             {
-                auditEntity.CreatedAt = DateTime.Now;
+                continue;
             }
 
-            if (entry.Value == EntityState.Modified && auditEntity != null)
+            // As datas têm set protegido na entidade: quem grava é a persistência, pelo EF.
+            // Horário local (DateTime.Now) mantido de propósito, para não misturar com os registros antigos.
+            var entityEntry = Entry(entry.Key);
+
+            if (entry.Value == EntityState.Added)
             {
-                auditEntity.UpdatedAt = DateTime.Now;
+                entityEntry.Property(nameof(IAuditable.CreatedAt)).CurrentValue = DateTime.Now;
+            }
+
+            if (entry.Value == EntityState.Modified)
+            {
+                entityEntry.Property(nameof(IAuditable.UpdatedAt)).CurrentValue = DateTime.Now;
             }
         }
     }

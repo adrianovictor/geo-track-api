@@ -1,10 +1,14 @@
+using Core.Common.Domain.Entities;
 using GeoTruck.Services.Domain.Enum;
 using GeoTruck.Services.Domain.Exceptions;
 
 namespace GeoTruck.Services.Domain.Common;
 
-public abstract class Statusable<TEntity> : Entity<TEntity>
-    where TEntity : class
+/// <summary>
+/// Entidade com status (ativo, inativo, bloqueado, excluído). A exclusão é lógica: muda o status.
+/// Fica no geo-track, e não na lib, porque os valores de status são do banco deste projeto.
+/// </summary>
+public abstract class Statusable : AuditableEntity<int>
 {
     public Status Status { get; set; }
 

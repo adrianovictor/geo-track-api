@@ -5,7 +5,7 @@ using GeoTruck.Services.Domain.ValueOvject;
 
 namespace GeoTruck.Services.Domain.Entities;
 
-public class Vehicle : Statusable<Vehicle>
+public class Vehicle : Statusable
 {
     private readonly List<VehicleLocation> _locations = [];
 
