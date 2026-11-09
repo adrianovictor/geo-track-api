@@ -7,7 +7,6 @@ namespace GeoTruck.Services.Infrastructure.Repositories.Common;
 
 public class EntityRepository(ApplicationDbContext context) : IRepository, IDisposable
 {
-    private readonly ApplicationDbContext _context = context;
     private bool _disposed = false;
 
     public void Dispose()
@@ -30,18 +29,18 @@ public class EntityRepository(ApplicationDbContext context) : IRepository, IDisp
 
     public async Task DeleteAsync<T>(T entity) where T : Entity<int>
     {
-        _context.Set<T>().Remove(entity);
-        await _context.SaveChangesAsync();
+        context.Set<T>().Remove(entity);
+        await context.SaveChangesAsync();
     }
 
     public IQueryable<T> GetAllAsync<T>() where T : Entity<int>
     {
-        return _context.Set<T>();
+        return context.Set<T>();
     }
 
     public IQueryable<T> GetQueryable<T>() where T : Entity<int>
     {
-        return _context.Set<T>();//.AsNoTracking();
+        return context.Set<T>();//.AsNoTracking();
     }
 
     public async Task<T?> GetFirstOrDefaultAsync<T>(
@@ -50,7 +49,7 @@ public class EntityRepository(ApplicationDbContext context) : IRepository, IDisp
         CancellationToken cancellationToken = default
     ) where T : Entity<int>
     {
-        IQueryable<T> query = _context.Set<T>();
+        IQueryable<T> query = context.Set<T>();
 
         if (includeProperties != null)
         {
@@ -69,13 +68,13 @@ public class EntityRepository(ApplicationDbContext context) : IRepository, IDisp
     {
         if (entity.IsTransient())
         // {
-        //     _context.Entry(entity).State = EntityState.Modified;
+        //     context.Entry(entity).State = EntityState.Modified;
         // }
         // else
         {
-            _context.Set<T>().Add(entity);
+            context.Set<T>().Add(entity);
         }
 
-        await _context.SaveChangesAsync();
+        await context.SaveChangesAsync();
     }
 }

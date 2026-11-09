@@ -8,31 +8,28 @@ namespace GeoTruck.Services.Application.Commands.UpdateVehicle;
 
 public class UpdateVehicleHandler(IVehicleRepository vehicleRepository, ILogger<UpdateVehicleHandler> logger) : IRequestHandler<UpdateVehicleCommand, VehicleDto>
 {
-    private readonly IVehicleRepository _vehicleRepository = vehicleRepository;
-    private readonly ILogger<UpdateVehicleHandler> _logger = logger;
-
     public async Task<VehicleDto> Handle(UpdateVehicleCommand request, CancellationToken cancellationToken)
     {
-        _logger.LogInformation("Iniciando atualização de veículo com ID: {Id}", request.Id);
-        var vehicle = await _vehicleRepository.GetByIdAsync(request.Id);
+        logger.LogInformation("Iniciando atualização de veículo com ID: {Id}", request.Id);
+        var vehicle = await vehicleRepository.GetByIdAsync(request.Id);
 
         if (vehicle is null)
         {
-            _logger.LogWarning("Tentativa de atualização falhou. Veículo com ID {Id} não encontrado.", request.Id);
+            logger.LogWarning("Tentativa de atualização falhou. Veículo com ID {Id} não encontrado.", request.Id);
             throw new VehicleNotFoundException($"Veículo com ID {request.Id} não encontrado.");
         }
 
-        _logger.LogInformation("Veículo encontrado. Atualizando informações.");
+        logger.LogInformation("Veículo encontrado. Atualizando informações.");
         vehicle.ChangeRenavam(request.Renavam);
         vehicle.ChangePlate(request.Plate);
         vehicle.ChangeModel(request.Model);
         vehicle.ChangeBrand(request.Brand);
         vehicle.ChangeYear(request.Year);
 
-        await _vehicleRepository.ThrowIfInUseAsync(vehicle, exceptVehicleId: vehicle.Id, cancellationToken);
+        await vehicleRepository.ThrowIfInUseAsync(vehicle, exceptVehicleId: vehicle.Id, cancellationToken);
 
-        _logger.LogInformation("Informações atualizadas. Salvando no repositório.");
-        await _vehicleRepository.SaveAsync(vehicle);
+        logger.LogInformation("Informações atualizadas. Salvando no repositório.");
+        await vehicleRepository.SaveAsync(vehicle);
 
         return VehicleDto.Create(
             vehicle.Id,

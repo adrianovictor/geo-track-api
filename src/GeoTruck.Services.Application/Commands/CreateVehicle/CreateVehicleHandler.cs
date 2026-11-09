@@ -9,12 +9,9 @@ namespace GeoTruck.Services.Application.Commands.CreateVehicle;
 
 public class CreateVehicleHandler(IVehicleRepository vehicleRepository, ILogger<CreateVehicleHandler> logger) : IRequestHandler<CreateVehicleCommand, VehicleDto>
 {
-    private readonly IVehicleRepository _vehicleRepository = vehicleRepository;
-    private readonly ILogger<CreateVehicleHandler> _logger = logger;
-
     public async Task<VehicleDto> Handle(CreateVehicleCommand request, CancellationToken cancellationToken)
     {
-        _logger.LogInformation("Iniciando criação de veículo com Renavam: {Renavam} e Placa: {Plate}", request.Renavam, request.Plate);
+        logger.LogInformation("Iniciando criação de veículo com Renavam: {Renavam} e Placa: {Plate}", request.Renavam, request.Plate);
         // Cria antes de consultar o banco: a validação dos campos (400) vem antes do conflito (409),
         // e a placa já chega normalizada para a comparação.
         var vehicle = Vehicle.Create(
@@ -24,10 +21,10 @@ public class CreateVehicleHandler(IVehicleRepository vehicleRepository, ILogger<
             request.Brand,
             request.Year);
 
-        await _vehicleRepository.ThrowIfInUseAsync(vehicle, cancellationToken: cancellationToken);
+        await vehicleRepository.ThrowIfInUseAsync(vehicle, cancellationToken: cancellationToken);
 
-        _logger.LogInformation("Veículo criado com sucesso. Salvando no repositório.");
-        await _vehicleRepository.SaveAsync(vehicle);
+        logger.LogInformation("Veículo criado com sucesso. Salvando no repositório.");
+        await vehicleRepository.SaveAsync(vehicle);
 
         return VehicleDto.Create(
             vehicle.Id,

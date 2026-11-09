@@ -7,13 +7,10 @@ namespace GeoTruck.Services.Application.Queries.GetAllVehicles;
 
 public class GetAllVehiclesHandler(IVehicleRepository repository, ILogger<GetAllVehiclesHandler> logger) : IRequestHandler<GetAllVehiclesCommand, GetAllVehiclesResponse>
 {
-    private readonly IVehicleRepository _repository = repository;
-    private readonly ILogger<GetAllVehiclesHandler> _logger = logger;
-
     public async Task<GetAllVehiclesResponse> Handle(GetAllVehiclesCommand request, CancellationToken cancellationToken)
     {
-        _logger.LogInformation("Iniciando busca de veículos com filtros.");
-        var pagedResult = await _repository.GetVehiclesWithFiltersAsync(
+        logger.LogInformation("Iniciando busca de veículos com filtros.");
+        var pagedResult = await repository.GetVehiclesWithFiltersAsync(
             renavam: request.Renavam,
             plate: request.Plate,
             model: request.Model,

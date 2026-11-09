@@ -8,19 +8,16 @@ namespace GeoTruck.Services.Application.Queries.GetById;
 
 public class GetByIdHandler(IVehicleRepository vehicleRepository, ILogger<GetByIdHandler> logger) : IRequestHandler<GetByIdCommand, VehicleDto>
 {
-    private readonly IVehicleRepository _vehicleRepository = vehicleRepository;
-    private readonly ILogger<GetByIdHandler> _logger = logger;
-
     public async Task<VehicleDto> Handle(GetByIdCommand request, CancellationToken cancellationToken)
     {
-        var vehicle = await _vehicleRepository.GetByIdAsync(request.Id, cancellationToken);
+        var vehicle = await vehicleRepository.GetByIdAsync(request.Id, cancellationToken);
         if (vehicle == null)
         {
-            _logger.LogWarning("Veículo com Id {VehicleId} não encontrado.", request.Id);
+            logger.LogWarning("Veículo com Id {VehicleId} não encontrado.", request.Id);
             throw new VehicleNotFoundException();
         }
 
-        _logger.LogInformation("Veículo com Id {VehicleId} encontrado.", request.Id);
+        logger.LogInformation("Veículo com Id {VehicleId} encontrado.", request.Id);
 
         return VehicleDto.Create(
             vehicle.Id,

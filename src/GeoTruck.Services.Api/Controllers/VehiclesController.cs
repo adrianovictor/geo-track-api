@@ -17,9 +17,6 @@ namespace GeoTruck.Services.Api.Controllers
     [ApiController]
     public class VehiclesController(IMediator mediator, ILogger<VehiclesController> logger) : ControllerBase
     {
-        private readonly IMediator _mediator = mediator;
-        private readonly ILogger<VehiclesController> _logger = logger;
-
         #region GET
         [HttpGet]
         [Tags("Veículos")]
@@ -27,7 +24,7 @@ namespace GeoTruck.Services.Api.Controllers
         [EndpointDescription("Retorna uma lista de todos os veículos cadastrados no sistema.")]
         public async Task<IActionResult> Get([FromQuery] QueryListVehicleRequest request)
         {
-            var response = await _mediator.Send(new GetAllVehiclesCommand(
+            var response = await mediator.Send(new GetAllVehiclesCommand(
                 request.Renavam,
                 request.Plate,
                 request.Model,
@@ -46,7 +43,7 @@ namespace GeoTruck.Services.Api.Controllers
         [EndpointDescription("Retorna os detalhes de um veículo específico pelo seu ID, incluindo suas localizações.")]
         public async Task<IActionResult> Get(int id)
         {
-            var response = await _mediator.Send(new GetByIdCommand(id));
+            var response = await mediator.Send(new GetByIdCommand(id));
             return Ok(response);
         }
         #endregion
@@ -66,7 +63,7 @@ namespace GeoTruck.Services.Api.Controllers
                 request.Year
             );
 
-            var response = await _mediator.Send(command);
+            var response = await mediator.Send(command);
             return CreatedAtAction(nameof(Get), new { id = response.Id }, response);
         }
 
@@ -97,7 +94,7 @@ namespace GeoTruck.Services.Api.Controllers
             catch (JsonException ex)
             {
                 // A mensagem do desserializador fica só no log: ela descreve o código, não o arquivo.
-                _logger.LogWarning(ex, "JSON inválido no upload de posições");
+                logger.LogWarning(ex, "JSON inválido no upload de posições");
                 throw new ValidationException(FileField, "Formato JSON inválido.");
             }
 
@@ -108,11 +105,11 @@ namespace GeoTruck.Services.Api.Controllers
             if (positions.Count > maxPositions)
                 throw new ValidationException(FileField, $"Arquivo contém {positions.Count} posições. Máximo permitido: {maxPositions}.");
 
-            _logger.LogInformation(
+            logger.LogInformation(
                 "Processando upload de {Count} posições de rota",
                 positions.Count);
 
-            var savedPositions = await _mediator.Send(new UploadVehicleLocationsCommand(positions));
+            var savedPositions = await mediator.Send(new UploadVehicleLocationsCommand(positions));
 
             return Ok(new
             {
@@ -140,7 +137,7 @@ namespace GeoTruck.Services.Api.Controllers
                 request.Year
             );
 
-            var response = await _mediator.Send(command);
+            var response = await mediator.Send(command);
 
             return Ok(response);
         }
@@ -153,8 +150,8 @@ namespace GeoTruck.Services.Api.Controllers
         [EndpointDescription("Remove um veículo do sistema.")]
         public async Task<IActionResult> Delete(int id)
         {
-            _logger.LogInformation("Recebida solicitação para deletar veículo com ID: {Id}", id);
-            await _mediator.Send(new DeleteVehicleCommand(id));
+            logger.LogInformation("Recebida solicitação para deletar veículo com ID: {Id}", id);
+            await mediator.Send(new DeleteVehicleCommand(id));
 
             return NoContent();
         }

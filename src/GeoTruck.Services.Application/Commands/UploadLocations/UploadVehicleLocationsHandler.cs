@@ -7,10 +7,6 @@ namespace GeoTruck.Services.Application.Commands.UploadLocations;
 
 public class UploadVehicleLocationsHandler(IVehicleRepository vehicleRepository, IVehicleLocationRepository vehicleLocationRepository, ILogger<UploadVehicleLocationsHandler> logger) : IRequestHandler<UploadVehicleLocationsCommand, int>
 {
-    private readonly IVehicleRepository _vehicleRepository = vehicleRepository;
-    private readonly IVehicleLocationRepository _vehicleLocationRepository = vehicleLocationRepository;
-    private readonly ILogger<UploadVehicleLocationsHandler> _logger = logger;
-
     public async Task<int> Handle(UploadVehicleLocationsCommand request, CancellationToken cancellationToken)
     {
         var locationsByPlate = request.Locations
@@ -26,11 +22,11 @@ public class UploadVehicleLocationsHandler(IVehicleRepository vehicleRepository,
             var locations = group.ToList();
             var addedForVehicle = 0;
 
-            var vehicle = await _vehicleRepository.GetByLicensePlateAsync(plate, cancellationToken);
+            var vehicle = await vehicleRepository.GetByLicensePlateAsync(plate, cancellationToken);
             
             if (vehicle == null)
             {
-                _logger.LogWarning(
+                logger.LogWarning(
                     "Veículo com placa {Plate} não encontrado. {Count} localizações ignoradas.",
                     plate,
                     locations.Count);
@@ -39,7 +35,7 @@ public class UploadVehicleLocationsHandler(IVehicleRepository vehicleRepository,
 
             foreach (var location in locations)
             {
-                var existingLocation = await _vehicleLocationRepository.GetByLocationAsync(
+                var existingLocation = await vehicleLocationRepository.GetByLocationAsync(
                     location.PositionId,
                     location.Latitude,
                     location.Longitude,
@@ -47,7 +43,7 @@ public class UploadVehicleLocationsHandler(IVehicleRepository vehicleRepository,
 
                 if (existingLocation == null)
                 {
-                    _logger.LogInformation(
+                    logger.LogInformation(
                         "Adicionando localização {PositionId} para veículo {Plate}",
                         location.PositionId,
                         plate);
@@ -63,20 +59,20 @@ public class UploadVehicleLocationsHandler(IVehicleRepository vehicleRepository,
                 }
                 else
                 {
-                    _logger.LogInformation(
+                    logger.LogInformation(
                         "Veículo com placa {Plate} já possui a localização {PositionId}. Ignorando.",
                         plate,
                         location.PositionId);
                 }
             }
 
-            _logger.LogInformation(
+            logger.LogInformation(
                 "Adicionadas {Count} de {Received} posições para veículo {Plate}",
                 addedForVehicle,
                 locations.Count,
                 plate);
 
-            await _vehicleRepository.SaveAsync(vehicle);
+            await vehicleRepository.SaveAsync(vehicle);
             added += addedForVehicle;
         }            
 
