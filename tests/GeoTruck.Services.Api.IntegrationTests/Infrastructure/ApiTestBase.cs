@@ -67,7 +67,33 @@ public abstract class ApiTestBase(GeoTrackApiFactory factory) : IAsyncLifetime
         var form = new MultipartFormDataContent { { file, "file", fileName } };
         return Client.PostAsync(UploadUrl, form, Ct);
     }
+
+    /// <summary>
+    /// Confere que a resposta é um erro em ProblemDetails (RFC 9457) com o status esperado e devolve o corpo.
+    /// </summary>
+    protected static async Task<ProblemResponse> AssertProblemAsync(HttpResponseMessage response, HttpStatusCode status)
+    {
+        Assert.Equal(status, response.StatusCode);
+        Assert.Equal("application/problem+json", response.Content.Headers.ContentType?.MediaType);
+
+        var problem = await response.Content.ReadFromJsonAsync<ProblemResponse>(Ct);
+        Assert.NotNull(problem);
+        Assert.Equal((int)status, problem.Status);
+        return problem;
+    }
+
+    /// <summary>Confere um 400 de validação com o erro no campo informado e devolve as mensagens do campo.</summary>
+    protected static async Task<string[]> AssertFieldErrorAsync(HttpResponseMessage response, string field)
+    {
+        var problem = await AssertProblemAsync(response, HttpStatusCode.BadRequest);
+        Assert.NotNull(problem.Errors);
+        Assert.True(problem.Errors.TryGetValue(field, out var messages), $"Esperava erro no campo '{field}'.");
+        return messages;
+    }
 }
+
+public sealed record ProblemResponse(
+    int Status, string? Title, string? Detail, Dictionary<string, string[]>? Errors);
 
 public sealed record VehicleResponse(
     int Id, Guid UniqueId, string Plate, string Model, string Brand, int Year, string Renavam, List<LocationResponse> Locations);

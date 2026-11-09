@@ -55,59 +55,86 @@ public class CreateVehicleTests(GeoTrackApiFactory factory) : ApiTestBase(factor
     }
 
     [Fact]
-    public async Task DuplicateRenavamIsRejected()
+    public async Task DuplicateRenavamIsRejectedWithConflict()
     {
         await CreateVehicleAsync(plate: "ABC1234", renavam: "11111111111");
 
         using var response = await PostVehicleAsync(NewVehicle(plate: "DEF5678", renavam: "11111111111"));
 
-        // BUG CONHECIDO: o correto é 409 Conflict.
-        Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
+        var problem = await AssertProblemAsync(response, HttpStatusCode.Conflict);
+        Assert.Equal("Já existe um veículo com o RENAVAM 11111111111.", problem.Detail);
     }
 
-    [Fact]
-    public async Task DuplicatePlateIsRejectedOnlyByTheDatabase()
+    [Theory]
+    [InlineData("ABC1234")]
+    [InlineData("abc1234")] // a comparação é feita com a placa já em maiúsculas
+    public async Task DuplicatePlateIsRejectedWithConflict(string plate)
     {
         await CreateVehicleAsync(plate: "ABC1234");
 
+        using var response = await PostVehicleAsync(NewVehicle(plate: plate));
+
+        var problem = await AssertProblemAsync(response, HttpStatusCode.Conflict);
+        Assert.Equal("Já existe um veículo com a placa ABC1234.", problem.Detail);
+    }
+
+    [Fact]
+    public async Task PlateOfADeletedVehicleIsStillInUse()
+    {
+        var deleted = await CreateVehicleAsync(plate: "ABC1234");
+        using (await Client.DeleteAsync($"{VehiclesUrl}/{deleted.Id}", Ct)) { }
+
         using var response = await PostVehicleAsync(NewVehicle(plate: "ABC1234"));
 
-        // BUG CONHECIDO: o correto é 409. A API não confere a placa antes de gravar;
-        // quem recusa é o índice único do banco, e a violação vira 500.
-        Assert.Equal(HttpStatusCode.InternalServerError, response.StatusCode);
+        // A exclusão é lógica e o índice único do banco vale também para os excluídos.
+        // Liberar a placa de um veículo excluído é decisão de produto, fora deste PR.
+        await AssertProblemAsync(response, HttpStatusCode.Conflict);
     }
 
     [Theory]
     [InlineData("AB12345")]
     [InlineData("ABCD123")]
     [InlineData("1234ABC")]
-    public async Task InvalidPlateIsRejected(string plate)
+    public async Task InvalidPlateIsRejectedOnThePlateField(string plate)
     {
         using var response = await PostVehicleAsync(NewVehicle(plate: plate));
 
-        // BUG CONHECIDO: o correto é 400 com o erro no campo "plate".
-        // O domínio lança ArgumentException, que o tratamento global transforma em 500.
-        Assert.Equal(HttpStatusCode.InternalServerError, response.StatusCode);
+        var messages = await AssertFieldErrorAsync(response, "plate");
+        Assert.Contains("placa brasileira válida", Assert.Single(messages));
     }
 
     [Theory]
     [InlineData(1899)]
     [InlineData(0)]
-    public async Task YearOutOfRangeIsRejected(int year)
+    public async Task YearOutOfRangeIsRejectedOnTheYearField(int year)
     {
         using var response = await PostVehicleAsync(NewVehicle(year: year));
 
-        // BUG CONHECIDO: o correto é 400 com o erro no campo "year".
-        Assert.Equal(HttpStatusCode.InternalServerError, response.StatusCode);
+        await AssertFieldErrorAsync(response, "year");
     }
 
     [Fact]
-    public async Task FutureYearIsRejected()
+    public async Task FutureYearIsRejectedOnTheYearField()
     {
         using var response = await PostVehicleAsync(NewVehicle(year: DateTime.UtcNow.Year + 1));
 
-        // BUG CONHECIDO: o correto é 400. Também vale rever a regra: modelo do ano seguinte é comum no Brasil.
-        Assert.Equal(HttpStatusCode.InternalServerError, response.StatusCode);
+        // Regra atual do domínio. Vale rever: modelo do ano seguinte é comum no Brasil.
+        var messages = await AssertFieldErrorAsync(response, "year");
+        Assert.Equal($"O campo 'year' deve estar entre 1900 e {DateTime.UtcNow.Year}.", Assert.Single(messages));
+    }
+
+    [Fact]
+    public async Task UnexpectedErrorsDoNotLeakDetails()
+    {
+        // Um RENAVAM maior que a coluna (VARCHAR 20) passa pelo domínio e só falha no banco:
+        // é o caminho de um erro inesperado, que deve virar 500 sem expor a mensagem do SQL Server.
+        // BUG CONHECIDO: o correto é 400 no campo "renavam". O tamanho dos campos (renavam 20,
+        // model e brand 50) não é validado antes de gravar.
+        using var response = await PostVehicleAsync(NewVehicle(renavam: new string('9', 200)));
+
+        var problem = await AssertProblemAsync(response, HttpStatusCode.InternalServerError);
+        Assert.DoesNotContain("truncated", problem.Detail ?? "", StringComparison.OrdinalIgnoreCase);
+        Assert.DoesNotContain("String or binary", await response.Content.ReadAsStringAsync(Ct));
     }
 
     [Fact]

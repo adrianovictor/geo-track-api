@@ -29,6 +29,8 @@ public class UpdateVehicleHandler(IVehicleRepository vehicleRepository, ILogger<
         vehicle.ChangeBrand(request.Brand);
         vehicle.ChangeYear(request.Year);
 
+        await _vehicleRepository.ThrowIfInUseAsync(vehicle, exceptVehicleId: vehicle.Id, cancellationToken);
+
         _logger.LogInformation("Informações atualizadas. Salvando no repositório.");
         await _vehicleRepository.SaveAsync(vehicle);
 

@@ -18,23 +18,22 @@ public class GetVehicleTests(GeoTrackApiFactory factory) : ApiTestBase(factory)
     }
 
     [Fact]
-    public async Task MissingVehicleIsReported()
+    public async Task MissingVehicleReturns404()
     {
         using var response = await Client.GetAsync($"{VehiclesUrl}/999999", Ct);
 
-        // BUG CONHECIDO: o correto é 404 Not Found.
-        Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
+        var problem = await AssertProblemAsync(response, HttpStatusCode.NotFound);
+        Assert.Equal("Veículo não encontrado.", problem.Detail);
     }
 
     [Fact]
-    public async Task DeletedVehicleIsNotReturned()
+    public async Task DeletedVehicleReturns404()
     {
         var created = await CreateVehicleAsync();
         using (await Client.DeleteAsync($"{VehiclesUrl}/{created.Id}", Ct)) { }
 
         using var response = await Client.GetAsync($"{VehiclesUrl}/{created.Id}", Ct);
 
-        // BUG CONHECIDO: o correto é 404 Not Found.
-        Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
+        await AssertProblemAsync(response, HttpStatusCode.NotFound);
     }
 }

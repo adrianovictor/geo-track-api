@@ -15,20 +15,16 @@ public class CreateVehicleHandler(IVehicleRepository vehicleRepository, ILogger<
     public async Task<VehicleDto> Handle(CreateVehicleCommand request, CancellationToken cancellationToken)
     {
         _logger.LogInformation("Iniciando criação de veículo com Renavam: {Renavam} e Placa: {Plate}", request.Renavam, request.Plate);
-        var existingVehicle = await _vehicleRepository.GetByRenavamAsync(request.Renavam);
-
-        if (existingVehicle != null)
-        {
-            _logger.LogWarning("Tentativa de criação de veículo falhou. Veículo com Renavam {Renavam} já existe.", request.Renavam);
-            throw new VehicleAlreadyExistsException($"Veículo com Renavam {request.Renavam} já existe.");
-        }
-
+        // Cria antes de consultar o banco: a validação dos campos (400) vem antes do conflito (409),
+        // e a placa já chega normalizada para a comparação.
         var vehicle = Vehicle.Create(
             request.Renavam,
             request.Plate,
             request.Model,
             request.Brand,
             request.Year);
+
+        await _vehicleRepository.ThrowIfInUseAsync(vehicle, cancellationToken: cancellationToken);
 
         _logger.LogInformation("Veículo criado com sucesso. Salvando no repositório.");
         await _vehicleRepository.SaveAsync(vehicle);

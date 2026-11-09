@@ -25,23 +25,58 @@ public class UpdateVehicleTests(GeoTrackApiFactory factory) : ApiTestBase(factor
     }
 
     [Fact]
-    public async Task MissingVehicleIsReported()
+    public async Task KeepingItsOwnPlateAndRenavamIsAllowed()
     {
-        using var response = await Client.PutAsJsonAsync($"{VehiclesUrl}/999999", NewVehicle(), Ct);
+        var created = await CreateVehicleAsync(plate: "ABC1234", renavam: "11111111111");
 
-        // BUG CONHECIDO: o correto é 404 Not Found.
-        Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
+        using var response = await Client.PutAsJsonAsync($"{VehiclesUrl}/{created.Id}",
+            NewVehicle(plate: "ABC1234", renavam: "11111111111", model: "FH 460"), Ct);
+
+        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+        Assert.Equal("FH 460", (await GetVehicleAsync(created.Id)).Model);
     }
 
     [Fact]
-    public async Task InvalidPlateIsRejectedAndNothingChanges()
+    public async Task MissingVehicleReturns404()
+    {
+        using var response = await Client.PutAsJsonAsync($"{VehiclesUrl}/999999", NewVehicle(), Ct);
+
+        await AssertProblemAsync(response, HttpStatusCode.NotFound);
+    }
+
+    [Fact]
+    public async Task PlateOfAnotherVehicleIsRejectedWithConflict()
+    {
+        await CreateVehicleAsync(plate: "ABC1234");
+        var other = await CreateVehicleAsync(plate: "DEF5678");
+
+        using var response = await Client.PutAsJsonAsync($"{VehiclesUrl}/{other.Id}", NewVehicle(plate: "ABC1234"), Ct);
+
+        await AssertProblemAsync(response, HttpStatusCode.Conflict);
+        Assert.Equal("DEF5678", (await GetVehicleAsync(other.Id)).Plate);
+    }
+
+    [Fact]
+    public async Task RenavamOfAnotherVehicleIsRejectedWithConflict()
+    {
+        await CreateVehicleAsync(plate: "ABC1234", renavam: "11111111111");
+        var other = await CreateVehicleAsync(plate: "DEF5678", renavam: "22222222222");
+
+        using var response = await Client.PutAsJsonAsync($"{VehiclesUrl}/{other.Id}",
+            NewVehicle(plate: "DEF5678", renavam: "11111111111"), Ct);
+
+        await AssertProblemAsync(response, HttpStatusCode.Conflict);
+        Assert.Equal("22222222222", (await GetVehicleAsync(other.Id)).Renavam);
+    }
+
+    [Fact]
+    public async Task InvalidPlateIsRejectedOnThePlateFieldAndNothingChanges()
     {
         var created = await CreateVehicleAsync(plate: "ABC1234");
 
         using var response = await Client.PutAsJsonAsync($"{VehiclesUrl}/{created.Id}", NewVehicle(plate: "INVALIDA"), Ct);
 
-        // BUG CONHECIDO: o correto é 400 com o erro no campo "plate".
-        Assert.Equal(HttpStatusCode.InternalServerError, response.StatusCode);
+        await AssertFieldErrorAsync(response, "plate");
         Assert.Equal("ABC1234", (await GetVehicleAsync(created.Id)).Plate);
     }
 }

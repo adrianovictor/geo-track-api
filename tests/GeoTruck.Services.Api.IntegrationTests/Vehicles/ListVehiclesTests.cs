@@ -67,14 +67,14 @@ public class ListVehiclesTests(GeoTrackApiFactory factory) : ApiTestBase(factory
     }
 
     [Fact]
-    public async Task EmptyResultIsReported()
+    public async Task EmptyResultReturns200WithAnEmptyList()
     {
         await CreateVehicleAsync(brand: "Volvo");
 
-        using var response = await Client.GetAsync($"{VehiclesUrl}?brand=naoexiste", Ct);
+        var list = await ListAsync("?brand=naoexiste");
 
-        // BUG CONHECIDO: o correto é 200 com lista vazia. Lista vazia é resultado, não erro.
-        Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
+        Assert.Empty(list.Vehicles);
+        Assert.Equal(0, list.TotalRecords);
     }
 
     [Fact]
@@ -91,16 +91,17 @@ public class ListVehiclesTests(GeoTrackApiFactory factory) : ApiTestBase(factory
     }
 
     [Fact]
-    public async Task OffsetSkipsRecordsInsteadOfPages()
+    public async Task PagesRequestedLikeTheFrontOverlap()
     {
         foreach (var plate in new[] { "AAA1111", "BBB2222", "CCC3333", "DDD4444" })
             await CreateVehicleAsync(plate: plate);
 
-        var first = await ListAsync("?limit=2&offset=1");
+        // O front (geo-track-app) pede Offset = (página - 1) * Limit: 0, 2, 4...
+        var first = await ListAsync("?limit=2&offset=0");
         var second = await ListAsync("?limit=2&offset=2");
 
-        // BUG CONHECIDO: o "offset" é a posição do primeiro registro (começando em 1), não o número da página.
-        // Com offset=2 a API pula só 1 registro, e as duas "páginas" repetem um veículo.
+        // BUG CONHECIDO: a API faz Skip(offset - 1), então a página 2 começa um registro antes
+        // e repete o último veículo da página 1. O correto é Skip(offset), com padrão 0 (hoje é 1).
         // Além disso, a consulta não tem OrderBy, então a ordem dos registros não é garantida (aviso 10102 do EF).
         Assert.Equal(2, second.Vehicles.Count);
         Assert.Single(first.Vehicles.Select(v => v.Id).Intersect(second.Vehicles.Select(v => v.Id)));
