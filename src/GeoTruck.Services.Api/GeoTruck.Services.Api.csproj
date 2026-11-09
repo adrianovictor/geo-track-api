@@ -22,6 +22,7 @@
   <ItemGroup>
     <ProjectReference Include="..\GeoTruck.Services.Application\GeoTruck.Services.Application.csproj" />
     <ProjectReference Include="..\GeoTruck.Services.CrossCutting\GeoTruck.Services.CrossCutting.csproj" />
+    <ProjectReference Include="..\..\libs\core-common-components\src\Core.Common.Api\Core.Common.Api.csproj" />
   </ItemGroup>
 
 </Project>
