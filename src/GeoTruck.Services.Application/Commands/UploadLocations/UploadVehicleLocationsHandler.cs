@@ -5,22 +5,26 @@ using Microsoft.Extensions.Logging;
 
 namespace GeoTruck.Services.Application.Commands.UploadLocations;
 
-public class UploadVehicleLocationsHandler(IVehicleRepository vehicleRepository, IVehicleLocationRepository vehicleLocationRepository, ILogger<UploadVehicleLocationsHandler> logger) : IRequestHandler<UploadVehicleLocationsCommand, Unit>
+public class UploadVehicleLocationsHandler(IVehicleRepository vehicleRepository, IVehicleLocationRepository vehicleLocationRepository, ILogger<UploadVehicleLocationsHandler> logger) : IRequestHandler<UploadVehicleLocationsCommand, int>
 {
     private readonly IVehicleRepository _vehicleRepository = vehicleRepository;
     private readonly IVehicleLocationRepository _vehicleLocationRepository = vehicleLocationRepository;
     private readonly ILogger<UploadVehicleLocationsHandler> _logger = logger;
 
-    public async Task<Unit> Handle(UploadVehicleLocationsCommand request, CancellationToken cancellationToken)
+    public async Task<int> Handle(UploadVehicleLocationsCommand request, CancellationToken cancellationToken)
     {
         var locationsByPlate = request.Locations
             .GroupBy(l => l.Plate)
             .ToList();
 
+        // Conta só as posições gravadas: placa desconhecida e posição repetida ficam de fora.
+        var added = 0;
+
         foreach (var group in locationsByPlate)
         {
             var plate = group.Key;
             var locations = group.ToList();
+            var addedForVehicle = 0;
 
             var vehicle = await _vehicleRepository.GetByLicensePlateAsync(plate, cancellationToken);
             
@@ -55,6 +59,7 @@ public class UploadVehicleLocationsHandler(IVehicleRepository vehicleRepository,
                         positionId: location.PositionId,
                         date: location.Date,
                         dateUTC: location.DateUTC));
+                    addedForVehicle++;
                 }
                 else
                 {
@@ -66,13 +71,15 @@ public class UploadVehicleLocationsHandler(IVehicleRepository vehicleRepository,
             }
 
             _logger.LogInformation(
-                "Adicionadas {Count} posições para veículo {Plate}",
+                "Adicionadas {Count} de {Received} posições para veículo {Plate}",
+                addedForVehicle,
                 locations.Count,
                 plate);
 
             await _vehicleRepository.SaveAsync(vehicle);
+            added += addedForVehicle;
         }            
 
-        return Unit.Value;
+        return added;
     }
 }

@@ -91,19 +91,49 @@ public class ListVehiclesTests(GeoTrackApiFactory factory) : ApiTestBase(factory
     }
 
     [Fact]
-    public async Task PagesRequestedLikeTheFrontOverlap()
+    public async Task PagesRequestedLikeTheFrontCoverEveryVehicleOnce()
     {
-        foreach (var plate in new[] { "AAA1111", "BBB2222", "CCC3333", "DDD4444" })
-            await CreateVehicleAsync(plate: plate);
+        var created = new List<int>();
+        foreach (var plate in new[] { "AAA1111", "BBB2222", "CCC3333", "DDD4444", "EEE5555" })
+            created.Add((await CreateVehicleAsync(plate: plate)).Id);
 
         // O front (geo-track-app) pede Offset = (página - 1) * Limit: 0, 2, 4...
-        var first = await ListAsync("?limit=2&offset=0");
-        var second = await ListAsync("?limit=2&offset=2");
+        var pages = new[]
+        {
+            await ListAsync("?limit=2&offset=0"),
+            await ListAsync("?limit=2&offset=2"),
+            await ListAsync("?limit=2&offset=4"),
+        };
 
-        // BUG CONHECIDO: a API faz Skip(offset - 1), então a página 2 começa um registro antes
-        // e repete o último veículo da página 1. O correto é Skip(offset), com padrão 0 (hoje é 1).
-        // Além disso, a consulta não tem OrderBy, então a ordem dos registros não é garantida (aviso 10102 do EF).
-        Assert.Equal(2, second.Vehicles.Count);
-        Assert.Single(first.Vehicles.Select(v => v.Id).Intersect(second.Vehicles.Select(v => v.Id)));
+        // Ordem por Id, sem repetir nem pular veículos entre as páginas.
+        Assert.Equal(created, pages.SelectMany(p => p.Vehicles).Select(v => v.Id));
+        Assert.Equal([1, 2, 3], pages.Select(p => p.CurrentPage));
+        Assert.All(pages, p => Assert.Equal(5, p.TotalRecords));
+    }
+
+    [Fact]
+    public async Task WithoutOffsetStartsAtTheFirstVehicle()
+    {
+        var first = await CreateVehicleAsync(plate: "AAA1111");
+        await CreateVehicleAsync(plate: "BBB2222");
+
+        var list = await ListAsync("?limit=1");
+
+        Assert.Equal(first.Id, Assert.Single(list.Vehicles).Id);
+    }
+
+    [Theory]
+    [InlineData("?limit=0", 1)]          // dividia por zero no cálculo da página e respondia 500
+    [InlineData("?limit=-5", 1)]
+    [InlineData("?limit=2&offset=-3", 2)]
+    public async Task OutOfRangeValuesAreCorrected(string query, int expectedCount)
+    {
+        await CreateVehicleAsync(plate: "AAA1111");
+        await CreateVehicleAsync(plate: "BBB2222");
+
+        var list = await ListAsync(query);
+
+        Assert.Equal(expectedCount, list.Vehicles.Count);
+        Assert.Equal(1, list.CurrentPage);
     }
 }

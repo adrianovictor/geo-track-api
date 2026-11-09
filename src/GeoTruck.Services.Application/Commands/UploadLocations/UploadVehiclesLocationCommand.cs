@@ -3,4 +3,5 @@ using MediatR;
 
 namespace GeoTruck.Services.Application.Commands.UploadLocations;
 
-public record UploadVehicleLocationsCommand(IEnumerable<VehicleRoutePositionDto> Locations) : IRequest<Unit>;
+/// <summary>Grava as posições do arquivo e devolve quantas foram gravadas.</summary>
+public record UploadVehicleLocationsCommand(IEnumerable<VehicleRoutePositionDto> Locations) : IRequest<int>;

@@ -10,5 +10,5 @@ public class QueryListVehicleRequest
     public string? Brand { get; set; }
     public int? Year { get; set; }
     public int Limit { get; set; } = 10;
-    public int Offset { get; set; } = 1;
+    public int Offset { get; set; } = 0;
 }

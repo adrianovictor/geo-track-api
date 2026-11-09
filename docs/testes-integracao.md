@@ -63,10 +63,14 @@ Os testes registram o comportamento **atual** da API, inclusive o que está erra
 
 | Cenário | Hoje | Correto |
 |---|---|---|
-| `offset` da listagem | `Skip(offset - 1)`: a página 2 repete o último veículo da página 1 | `Skip(offset)`, com padrão 0 e `OrderBy` (o front envia `(página - 1) * Limit`) |
-| Upload com placa desconhecida | `processedPositions` conta as posições ignoradas | contar só as gravadas |
 | Campo maior que a coluna (RENAVAM 20, modelo e marca 50) | 500 | 400 com o erro no campo |
 
 Corrigidos no PR 3: os status de veículo inexistente (404), exclusão (204), listagem vazia (200), duplicidade (409), validação (400 com `errors`) e a mensagem interna do desserializador no upload.
+
+Corrigidos no PR 4:
+
+- **Paginação:** o `offset` passou a ser a quantidade de registros a pular (`Skip(offset)`, padrão 0), com ordem por `Id`. As páginas que o front pede (`Offset = (página - 1) * Limit`) não se repetem mais.
+- **Valores fora do intervalo:** `limit` ≤ 0 e `offset` negativo passaram a ser corrigidos. Antes, `limit=0` respondia 500, por divisão por zero.
+- **Upload:** `processedPositions` conta só as posições gravadas.
 
 Para listar os casos no código: `grep -rn "BUG CONHECIDO" tests/`.
