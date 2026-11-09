@@ -11,6 +11,11 @@ updates:
         patterns: ["Microsoft.EntityFrameworkCore*", "Microsoft.AspNetCore*"]
       testes:
         patterns: ["xunit*", "Testcontainers*"]
+    ignore:
+      # A partir da v13 o MediatR tem licença comercial. Fica na 12.x,
+      # recebendo só as atualizações minor e patch.
+      - dependency-name: "MediatR*"
+        update-types: ["version-update:semver-major"]
 
   - package-ecosystem: github-actions
     directory: /
