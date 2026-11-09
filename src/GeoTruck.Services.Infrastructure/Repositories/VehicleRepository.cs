@@ -56,11 +56,11 @@ public class VehicleRepository(IRepository repository, ILogger<VehicleRepository
         {
             logger.LogDebug("Buscando veículo com localizações por placa: {Plate}", licensePlate);
 
-        var vehicle = await repository.GetQueryable<Vehicle>()
-            .Include(v => v.Locations.OrderBy(l => l.Date))
-                .Where(v => v.Plate.Value == licensePlate && v.Status != Domain.Enum.Status.Delete)
-                .SingleOrDefaultAsync(cancellationToken);
-            
+            var vehicle = await repository.GetQueryable<Vehicle>()
+                .Include(v => v.Locations.OrderBy(l => l.Date))
+                    .Where(v => v.Plate.Value == licensePlate && v.Status != Domain.Enum.Status.Delete)
+                    .SingleOrDefaultAsync(cancellationToken);
+
             return vehicle;
         });
     }
@@ -87,10 +87,10 @@ public class VehicleRepository(IRepository repository, ILogger<VehicleRepository
                 "Buscando veículos com filtros- Renavam: {Renavam}, Plate: {Plate}, Offset: {Offset}, Limit: {Limit}",
                 renavam, plate, offset, limit);
 
-            var query = repository.GetQueryable<Vehicle>(); 
-            var filteredQuery = query.ApplyFilters(renavam, plate, model, brand, year); 
+            var query = repository.GetQueryable<Vehicle>();
+            var filteredQuery = query.ApplyFilters(renavam, plate, model, brand, year);
 
-            var totalRecords = await filteredQuery.CountAsync(cancellationToken); 
+            var totalRecords = await filteredQuery.CountAsync(cancellationToken);
 
             var vehicles = await filteredQuery
                 .Paginate(offset, limit)
@@ -107,7 +107,7 @@ public class VehicleRepository(IRepository repository, ILogger<VehicleRepository
         catch (Exception ex)
         {
             logger.LogError(ex, "Erro ao obter veículos com filtros");
-            throw;            
+            throw;
         }
     }
 

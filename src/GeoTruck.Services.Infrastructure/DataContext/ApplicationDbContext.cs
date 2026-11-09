@@ -43,7 +43,7 @@ public class ApplicationDbContext(DbContextOptions<ApplicationDbContext> options
             var entries = GetEntities();
 
             TraceAudit(entries);
-            
+
             affectedRows = await action();
 
             await Task.CompletedTask;
@@ -95,5 +95,5 @@ public class ApplicationDbContext(DbContextOptions<ApplicationDbContext> options
             }
         }
     }
-     
+
 }

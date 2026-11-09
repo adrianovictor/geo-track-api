@@ -14,7 +14,7 @@ public abstract class StatusableMap<TEntity> : EntityMap<TEntity>
         builder.Ignore(_ => _.IsInactive);
         builder.Ignore(_ => _.IsActive);
         builder.Ignore(_ => _.IsDeleted);
-        builder.Ignore(_ => _.IsBlocked);        
+        builder.Ignore(_ => _.IsBlocked);
 
         base.Configure(builder);
     }

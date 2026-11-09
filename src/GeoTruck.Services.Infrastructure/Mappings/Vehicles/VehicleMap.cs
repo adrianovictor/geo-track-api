@@ -15,7 +15,7 @@ public class VehicleMap : StatusableMap<Vehicle>
         builder.HasKey(e => e.Id);
         builder.Property(e => e.UniqueId).IsRequired();
         builder.OwnsOne(_ => _.Plate).Property(_ => _.Value).IsRequired().HasMaxLength(10).HasColumnName("Plate");
-        
+
         builder.Property(e => e.Renavam).IsRequired().HasMaxLength(20);
         builder.Property(e => e.Model).IsRequired().HasMaxLength(50);
         builder.Property(e => e.Brand).IsRequired().HasMaxLength(50);
@@ -25,6 +25,6 @@ public class VehicleMap : StatusableMap<Vehicle>
                .WithOne(l => l.Vehicle)
                .HasForeignKey(l => l.VehicleId);
 
-        
+
     }
 }

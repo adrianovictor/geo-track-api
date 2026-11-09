@@ -16,7 +16,7 @@ public class VehicleLocationRepository(IRepository repository, ILogger<VehicleLo
     {
         throw new NotImplementedException();
     }
-    
+
     public async Task<VehicleLocation?> GetByLocationAsync(long positionId, decimal latitude, decimal longitude, DateTime date, CancellationToken cancellationToken)
     {
         return await repository.GetFirstOrDefaultAsync<VehicleLocation>(v =>

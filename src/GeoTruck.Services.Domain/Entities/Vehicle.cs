@@ -97,9 +97,9 @@ public class Vehicle : Statusable
     public void RemoveLocation(VehicleLocation location)
     {
         location.ThrowIfNull(nameof(location));
-        
+
         var removed = _locations.Remove(location);
-        
+
         if (!removed)
             throw new VehicleLocationNotFoundException();
     }

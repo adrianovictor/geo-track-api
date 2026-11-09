@@ -1,0 +1,32 @@
+name: Bug
+description: A API responde diferente do esperado.
+title: "bug: "
+labels: [bug]
+body:
+  - type: textarea
+    id: o-que-aconteceu
+    attributes:
+      label: O que aconteceu
+      description: Endpoint, request enviado e resposta recebida (status e corpo).
+      placeholder: |
+        POST /api/Vehicles com { "plate": "ABC1234", ... }
+        Resposta: 500
+    validations:
+      required: true
+  - type: textarea
+    id: esperado
+    attributes:
+      label: O que era esperado
+      placeholder: 409, porque a placa já está cadastrada.
+    validations:
+      required: true
+  - type: textarea
+    id: como-reproduzir
+    attributes:
+      label: Como reproduzir
+      description: Passos mínimos. Se der, um teste de integração que falha.
+  - type: input
+    id: versao
+    attributes:
+      label: Versão ou commit
+      placeholder: v1.0.0 ou 175831c

@@ -22,7 +22,7 @@ public class VehicleDto
             Year = year,
             Renavam = renavam
         };
-    
+
     public static VehicleDto Create(int id, Guid uniqueId, string licensePlate, string model, string brand, int year, string renavam, List<VehicleLocationDto> locations) =>
         new VehicleDto
         {
