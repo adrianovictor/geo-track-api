@@ -17,7 +17,7 @@
     <PackageReference Include="Polly" Version="8.9.1" />
     <!-- Dependência indireta do Microsoft.Data.SqlClient 6.1.7, que traz a 9.0.11 (CVE-2026-84008 e CVE-2026-70162).
          Remover quando o EF Core passar a depender de uma versão corrigida. -->
-    <PackageReference Include="System.Security.Cryptography.Pkcs" Version="10.0.14" />
+    <PackageReference Include="System.Security.Cryptography.Pkcs" Version="11.0.0" />
   </ItemGroup>
 
   <ItemGroup>
